@@ -103,8 +103,13 @@ async function handleAuth(req: Request) {
   const { initData } = await req.json();
   if (!initData) return err("Missing initData");
 
+  console.log("AUTH: initData length =", initData.length, "BOT_TOKEN exists =", !!BOT_TOKEN, "BOT_TOKEN prefix =", BOT_TOKEN?.substring(0, 6));
+
   const validated = await validateTelegramData(initData);
-  if (!validated) return err("Invalid Telegram data", 401);
+  if (!validated) {
+    console.log("AUTH FAILED: HMAC validation failed");
+    return err("Invalid Telegram data", 401);
+  }
 
   const userJson = JSON.parse(validated.user || "{}");
   const tgId = userJson.id;

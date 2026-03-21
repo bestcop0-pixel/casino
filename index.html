@@ -1781,21 +1781,39 @@ function switchToReal() {
 
 // ═══════ AUTH BOOT ═══════
 async function bootAuth() {
-  const initData = window.Telegram?.WebApp?.initData;
+  const tg = window.Telegram?.WebApp;
+  const initData = tg?.initData;
   if (!initData) {
     // Нет Telegram — показываем экран авторизации
     hideLoading();
     document.getElementById('authScreen').style.display = 'block';
     return;
   }
-  const data = await api('game-api', '/auth', { initData });
-  if (data) {
+  // Telegram Mini App — автовход
+  try {
+    tg.ready();
+    tg.expand();
+  } catch(e){}
+
+  // Пробуем авторизоваться через сервер
+  let data = null;
+  try {
+    const res = await fetch(`${API_BASE}/game-api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData }),
+    });
+    data = await res.json();
+    if (data.error) { console.warn('Auth error:', data.error); data = null; }
+  } catch(e) { console.warn('Auth fetch error:', e); }
+
+  if (data && data.user_id) {
     S.userId = data.user_id;
     S.tgId = data.tg_id;
     S.token = data.token;
     S.isAuthed = true;
     S.isAdmin = data.is_admin;
-    S.balance = data.balance;
+    S.balance = parseFloat(data.balance) || 0;
     S.freeSpins = data.free_spins || [];
     S.transactions = (data.transactions || []).map(tx => ({
       type: tx.type === 'deposit' ? 'dep' : tx.type === 'win' || tx.type === 'free_spin_win' ? 'win' : 'lose',
@@ -1804,6 +1822,7 @@ async function bootAuth() {
       date: new Date(tx.created_at).toLocaleString('ru-RU', {hour:'2-digit',minute:'2-digit'}),
     }));
     document.getElementById('balDisp').textContent = fmt(S.balance);
+    showToast('Добро пожаловать, ' + (tg?.initDataUnsafe?.user?.first_name || 'игрок') + '!');
 
     // Realtime: следим за изменениями баланса
     if (sb) {
@@ -1823,8 +1842,18 @@ async function bootAuth() {
         .subscribe();
     }
   } else {
-    // Auth не прошёл — показываем демо
-    document.getElementById('authScreen').style.display = 'block';
+    // Auth не прошёл — входим в демо автоматически в Telegram
+    S.balance = 1000; S.isAuthed = true; S.userId = 'demo'; S.isDemo = true;
+    document.getElementById('balDisp').textContent = fmt(S.balance);
+    const pill = document.querySelector('.balance-pill');
+    if (pill && !pill.querySelector('.demo-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'demo-badge';
+      badge.textContent = 'DEMO';
+      badge.style.cssText = 'background:var(--orange);color:#000;font-size:10px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:4px;';
+      pill.appendChild(badge);
+    }
+    showToast('Демо режим (авторизация временно недоступна)');
   }
   hideLoading();
 }
