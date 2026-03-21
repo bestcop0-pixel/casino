@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>JetCasino</title>
+<title>Sphere</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -1264,8 +1264,8 @@ html, body {
 <body>
 <!-- Loading Overlay -->
 <div id="loadingOverlay" style="position:fixed;inset:0;z-index:9999;background:#0e1015;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-  <div style="font-size:42px;animation:pulse 1.5s infinite">🎰</div>
-  <div style="color:var(--accent);font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;">JetCasino</div>
+  <img src="logo.png" style="height:48px;animation:pulse 1.5s infinite">
+  <div style="color:var(--accent);font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;">Sphere</div>
   <div style="width:120px;height:3px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-top:8px;">
     <div style="width:40%;height:100%;background:var(--accent);border-radius:4px;animation:loadBar 1.2s ease-in-out infinite;"></div>
   </div>
@@ -1305,13 +1305,7 @@ html, body {
   <!-- TOPBAR -->
   <div id="topbar">
     <div class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 32 32" fill="none">
-          <path d="M6 26L16 4L26 26" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M10 18H22" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="16" cy="26" r="2" fill="var(--accent)"/>
-        </svg>
-      </div>
+      <img src="logo.png" style="height:32px;">
     </div>
     <div class="top-right">
       <div class="balance-pill" onclick="navigate('wallet')">
@@ -1709,6 +1703,7 @@ const S = {
   token: null,
   isAuthed: false,
   isAdmin: false,
+  isDemo: false,
   freeSpins: [],
   transactions: [],
 };
@@ -1741,9 +1736,17 @@ async function api(func, path, body={}) {
 async function bootAuth() {
   const initData = window.Telegram?.WebApp?.initData;
   if (!initData) {
-    // Dev mode — фейковая авторизация для тестирования
-    S.balance = 1000; S.isAuthed = true; S.userId = 'dev';
+    // Demo mode — демо-режим без Telegram
+    S.balance = 1000; S.isAuthed = true; S.userId = 'demo'; S.isDemo = true;
     document.getElementById('balDisp').textContent = fmt(S.balance);
+    // Добавляем бейдж «Демо» рядом с балансом
+    const pill = document.querySelector('.balance-pill');
+    if (pill) {
+      const badge = document.createElement('span');
+      badge.textContent = 'Демо';
+      badge.style.cssText = 'background:var(--orange);color:#000;font-size:10px;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:4px;letter-spacing:0.03em;';
+      pill.appendChild(badge);
+    }
     hideLoading();
     return;
   }
@@ -2633,6 +2636,7 @@ function updateWallet(){
 }
 // ═══ DEPOSIT ═══
 function walletDeposit(){
+  if(S.isDemo){ showToast('Демо режим — откройте казино через Telegram бота для реальной игры'); return; }
   const modal = document.getElementById('depositModal');
   const amounts = [5, 10, 25, 50, 100, 500];
   document.getElementById('depAmounts').innerHTML = amounts.map(a =>
@@ -2667,6 +2671,7 @@ async function confirmDeposit(){
 
 // ═══ WITHDRAW ═══
 function walletWithdraw(){
+  if(S.isDemo){ showToast('Демо режим — откройте казино через Telegram бота для реальной игры'); return; }
   if(S.balance < 5){ showToast('Минимум для вывода: 5 USDT'); return; }
   document.getElementById('withAvail').textContent = fmt(S.balance);
   document.getElementById('withAmount').value = '';
