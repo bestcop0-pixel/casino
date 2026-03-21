@@ -2816,15 +2816,8 @@ async function renderLB(type){
 
 // ═══════ GAME LAUNCHER ═══════
 async function launchGame(url){
-  // Get server seed for iframe slots
-  let seedParam = '';
-  if(S.isAuthed && url.includes('games/')) {
-    const gameName = url.split('/').pop().replace('.html','');
-    const seedData = await api('game-api', '/game/iframe', { action:'get-seed', game: gameName });
-    if(seedData && seedData.seed) seedParam = '&seed=' + seedData.seed;
-  }
   const sep=url.includes('?')?'&':'?';
-  document.getElementById('gameFrame').src=url+sep+'bal='+S.balance.toFixed(2)+seedParam;
+  document.getElementById('gameFrame').src=url+sep+'bal='+S.balance.toFixed(2);
   document.getElementById('gameOverlay').style.display='block';
   document.getElementById('app').style.display='none';
 }
