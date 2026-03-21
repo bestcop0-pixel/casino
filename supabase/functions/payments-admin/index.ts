@@ -10,6 +10,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRYPTO_BOT_TOKEN = Deno.env.get("CRYPTO_BOT_TOKEN")!;
 const BOT_TOKEN = Deno.env.get("BOT_TOKEN")!;
+const ADMIN_PASSWORD = Deno.env.get("ADMIN_PASSWORD") || "sphere_admin_2024";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -46,6 +47,12 @@ async function getUserByToken(req: Request) {
 }
 
 async function requireAdmin(req: Request) {
+  // Check admin password from header
+  const adminPass = req.headers.get("x-admin-password");
+  if (adminPass === ADMIN_PASSWORD) {
+    return { id: "admin", is_admin: true, tg_id: 0, balance: 0 };
+  }
+  // Fallback: check JWT token
   const user = await getUserByToken(req);
   if (!user) return null;
   if (!user.is_admin) return null;

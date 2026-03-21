@@ -120,6 +120,16 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
 <body>
 <div id="loading"><div class="spinner"></div></div>
 
+<!-- Admin Login -->
+<div id="adminLogin" style="display:none;position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <img src="logo.png" style="height:60px;margin-bottom:12px;">
+  <h2 style="color:var(--accent);margin-bottom:4px;">Sphere Admin</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:24px;">Введите пароль администратора</p>
+  <input id="adminPassInput" type="password" placeholder="Пароль" style="width:100%;max-width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;color:white;font-size:15px;outline:none;margin-bottom:12px;text-align:center;" onkeypress="if(event.key==='Enter')adminLogin()">
+  <button onclick="adminLogin()" style="width:100%;max-width:300px;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer;">Войти</button>
+  <div id="adminLoginErr" style="color:var(--red);font-size:13px;margin-top:12px;display:none;"></div>
+</div>
+
 <div id="app" style="display:none;">
   <div class="header">
     <h1><img src="logo.png" style="height:28px;vertical-align:middle;margin-right:6px;">Sphere <span style="font-size:13px;color:var(--text3);font-weight:500;">Admin</span></h1>
@@ -299,16 +309,17 @@ const SUPABASE_URL = 'https://klgvhthxvwokdzmlguur.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsZ3ZodGh4dndva2R6bWxndXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDg4NjgsImV4cCI6MjA4OTU4NDg2OH0.BTu5zjF7PrS8GNp6eBLeQpqPY3I2-6Aq8-XshNOrqYw';
 const API_BASE = SUPABASE_URL + '/functions/v1';
 let TOKEN = null;
+let ADMIN_PASS = null;
 
 // ═══ API ═══
 async function api(func, path, body={}) {
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (TOKEN) headers['Authorization'] = 'Bearer '+TOKEN;
+    if (ADMIN_PASS) headers['x-admin-password'] = ADMIN_PASS;
     const res = await fetch(`${API_BASE}/${func}${path}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': TOKEN ? 'Bearer '+TOKEN : '',
-      },
+      headers,
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -320,15 +331,32 @@ async function api(func, path, body={}) {
   }
 }
 
+// ═══ ADMIN LOGIN ═══
+async function adminLogin() {
+  const pass = document.getElementById('adminPassInput').value;
+  if (!pass) return;
+  ADMIN_PASS = pass;
+  // Test password by calling stats
+  const data = await api('payments-admin', '/admin/stats');
+  if (data) {
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+  } else {
+    ADMIN_PASS = null;
+    const errEl = document.getElementById('adminLoginErr');
+    errEl.textContent = 'Неверный пароль';
+    errEl.style.display = 'block';
+  }
+}
+
 // ═══ AUTH ═══
 async function boot() {
   const initData = window.Telegram?.WebApp?.initData;
   if (!initData) {
-    // Dev mode
-    TOKEN = 'dev';
+    // Показать экран логина
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadDashboard();
+    document.getElementById('adminLogin').style.display = 'flex';
     return;
   }
 

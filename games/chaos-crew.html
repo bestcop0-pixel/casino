@@ -188,7 +188,7 @@ const SYM=[
   {id:3,n:'Skull',   pMin:5,pMax:10,w:14,  colors:['#e0e0e0','#bdbdbd','#757575','#ffffff'],type:'skull'},
   {id:4,n:'Fire',    pMin:3,pMax:8,w:18,   colors:['#ff6d00','#ff9100','#dd2c00','#ffab40'],type:'fire'},
   {id:5,n:'Lightning',pMin:2,pMax:5,w:20,  colors:['#00b0ff','#0091ea','#01579b','#80d8ff'],type:'bolt'},
-  {id:6,n:'Star',    pMin:0,pMax:0,w:3,    colors:['#e040fb','#aa00ff','#7b1fa2','#ea80fc'],type:'star'},
+  {id:6,n:'Star',    pMin:0,pMax:0,w:6,    colors:['#e040fb','#aa00ff','#7b1fa2','#ea80fc'],type:'star'},
   {id:7,n:'Bomb',    pMin:0,pMax:0,w:0,    colors:['#546e7a','#37474f','#263238','#cfd8dc'],type:'bomb'},
 ];
 const SCAT=6,BOMB=7;
@@ -304,7 +304,7 @@ function rndSym(){
   for(let i=0;i<t.length;i++){r-=ws[i];if(r<=0)return t[i].id}
   return t[t.length-1].id;
 }
-function fsSym(){return gameRand()<.06?BOMB:rndSym()}
+function fsSym(){return gameRand()<.14?BOMB:rndSym()}
 function mkSym(c,r,id){
   const sx=gL+c*cW+cW/2,sy=gT+r*cH+cH/2;
   return{id,c,r,x:sx,y:sy,ty:sy,vy:0,sc:1,al:1,gl:0,bp:Math.random()*Math.PI*2,bm:0,fall:false,rot:0,shimmer:Math.random()*Math.PI*2,popSc:0,popT:0}
@@ -923,7 +923,7 @@ function updSpin(now){
           grid[c][r]=mkSym(c,r,pending[c][r]);grid[c][r].al=1;
           grid[c][r].popSc=1;
           if(pending[c][r]===BOMB){
-            const ms=[2,3,5,10,15,20,25,50,100],ws2=[30,25,18,12,6,4,3,1.5,.5];
+            const ms=[2,3,5,10,15,20,25,50,100],ws2=[20,18,16,14,10,8,6,5,3];
             let tw2=ws2.reduce((a,b)=>a+b,0),rr2=gameRand()*tw2,mv=2;
             for(let i=0;i<ms.length;i++){rr2-=ws2[i];if(rr2<=0){mv=ms[i];break}}
             grid[c][r].bm=mv;
@@ -1070,9 +1070,9 @@ function onSpinDone(){
   }
   // Check for new scatter trigger (4+ scatters)
   const sc=cntScat();
-  if(sc>=4&&fsLeft===0){
+  if(sc>=3&&fsLeft===0){
     // Trigger free spins with intro animation
-    const spinsWon=sc>=6?20:sc>=5?15:10;
+    const spinsWon=sc>=6?25:sc>=5?20:sc>=4?15:10;
     sndScatter();
     state='IDLE'; // reset state so startSpin works
     showFSIntro(spinsWon,1,()=>{
@@ -1195,7 +1195,7 @@ function tumbleFall(){
       const id=fsLeft>0?fsSym():rndSym();
       grid[c][r]=mkSym(c,r,id);grid[c][r].y=gT-cH*2;grid[c][r].fall=true;grid[c][r].vy=0;grid[c][r].popSc=1;
       if(id===BOMB){
-        const ms=[2,3,5,10,15,20,25,50,100],ws2=[30,25,18,12,6,4,3,1.5,.5];
+        const ms=[2,3,5,10,15,20,25,50,100],ws2=[20,18,16,14,10,8,6,5,3];
         let tw2=ws2.reduce((a,b)=>a+b,0),rr2=gameRand()*tw2,mv=2;
         for(let i=0;i<ms.length;i++){rr2-=ws2[i];if(rr2<=0){mv=ms[i];break}}
         grid[c][r].bm=mv;

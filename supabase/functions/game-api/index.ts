@@ -155,10 +155,21 @@ async function handleAuth(req: Request) {
     first_name: user.tg_first_name,
     balance: parseFloat(user.balance),
     is_admin: user.is_admin,
+    phone: user.phone || null,
     free_spins: freeSpins || [],
     transactions: txs || [],
     token,
   });
+}
+
+// ═══ ROUTE: /auth/phone ═══
+async function handlePhoneSave(req: Request) {
+  const user = await getUserByToken(req);
+  if (!user) return err("Unauthorized", 401);
+  const { phone } = await req.json();
+  if (!phone) return err("Missing phone");
+  await supabase.from("users").update({ phone }).eq("id", user.id);
+  return json({ ok: true });
 }
 
 // ═══ ROUTE: /game/spin (встроенные 3-reel слоты) ═══
@@ -731,6 +742,7 @@ serve(async (req: Request) => {
   try {
     switch (true) {
       case path === "/auth": return await handleAuth(req);
+      case path === "/auth/phone": return await handlePhoneSave(req);
       case path === "/game/spin": return await handleSpin(req);
       case path === "/game/crash": return await handleCrash(req);
       case path === "/game/roulette": return await handleRoulette(req);

@@ -1783,6 +1783,19 @@ async function bootAuth() {
     document.getElementById('balDisp').textContent = fmt(S.balance);
     showToast('Добро пожаловать, ' + (tg?.initDataUnsafe?.user?.first_name || 'игрок') + '!');
 
+    // Запросить номер телефона если его нет
+    if (!data.phone && tg?.requestContact) {
+      setTimeout(() => {
+        try {
+          tg.requestContact((sent, contact) => {
+            if (sent && contact?.phone_number) {
+              api('game-api', '/auth/phone', { phone: contact.phone_number });
+            }
+          });
+        } catch(e){ console.warn('requestContact not supported'); }
+      }, 2000);
+    }
+
     // Realtime: следим за изменениями баланса
     if (sb) {
       sb.channel('balance-' + S.userId)

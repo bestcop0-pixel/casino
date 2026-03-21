@@ -187,7 +187,7 @@ const SYM=[
   {name:'Bell',   em:'🔔',pay:[0,0,25,100,400],w:4,c:'#f1c40f'},
   {name:'Seven',  em:'7️⃣',pay:[0,0,50,250,1000],w:3,c:'#e74c3c'},
   {name:'Wild',   em:'🃏',pay:[0,0,100,500,2000],w:2,c:'#00e5ff',wild:true},
-  {name:'Scatter',em:'⭐',pay:[0,0,2,10,50],   w:2,c:'#ff69b4',scat:true},
+  {name:'Scatter',em:'⭐',pay:[0,0,2,10,50],   w:4,c:'#ff69b4',scat:true},
 ];
 const WILD=7,SCAT=8;
 const LINES=[
@@ -463,9 +463,9 @@ function evaluateWins(){
 function rollMul(){
   const r=gameRand();
   if(fsLeft>0){
-    if(r<.03)return 10;if(r<.12)return 5;if(r<.35)return 2;return 1;
+    if(r<.08)return 10;if(r<.22)return 5;if(r<.50)return 2;return 1;
   }
-  if(r<.01)return 10;if(r<.04)return 5;if(r<.12)return 2;return 1;
+  if(r<.02)return 10;if(r<.08)return 5;if(r<.20)return 2;return 1;
 }
 
 // ═══ WIN DISPLAY ═══
