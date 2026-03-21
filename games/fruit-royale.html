@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e27">
+<title>Fruit Royale</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#0a0e27;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+body{display:flex;justify-content:center;font-family:'Inter',sans-serif;color:#fff}
+#G{position:relative;width:100%;max-width:480px;height:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+canvas.overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:40}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;z-index:10;flex-shrink:0}
+.bbk{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;backdrop-filter:blur(10px)}
+.ttl{font-family:'Lilita One',cursive;font-size:clamp(16px,5vw,22px);background:linear-gradient(180deg,#ffe44d 0%,#ff8c00 50%,#ff5500 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));letter-spacing:1px}
+.bal{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;font-size:clamp(10px,3vw,12px);font-weight:700;backdrop-filter:blur(10px)}
+.bal span{color:#7df56a}
+
+/* Free Spins Banner */
+.fsb{display:none;align-items:center;justify-content:center;gap:10px;padding:4px 0;background:linear-gradient(90deg,transparent,rgba(255,215,0,.15),transparent);font-weight:800;font-size:13px;color:#ffd700;flex-shrink:0;letter-spacing:1px}
+.fsb.sh{display:flex}
+.fsb .fc{background:rgba(255,215,0,.2);border-radius:8px;padding:2px 8px;font-size:15px}
+.fsb .fm{color:#7df56a}
+
+/* Machine */
+.machine{position:relative;margin:4px 8px;border-radius:14px;background:linear-gradient(145deg,#151a35,#0a0e1a);border:2px solid rgba(255,215,0,.25);box-shadow:0 0 30px rgba(255,215,0,.08),inset 0 0 40px rgba(0,0,0,.6),0 8px 32px rgba(0,0,0,.5);overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* Payline Markers */
+.pl-wrap{display:flex;width:100%;flex:1;min-height:0}
+.pl-col{width:22px;display:flex;flex-direction:column;justify-content:space-around;padding:4px 2px;flex-shrink:0}
+.pl-m{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;border:1.5px solid;opacity:.4;transition:.3s;cursor:pointer}
+.pl-m.lit{opacity:1;box-shadow:0 0 8px var(--c)}
+
+/* Reels Container */
+.reels{flex:1;display:flex;gap:2px;min-height:0;position:relative;overflow:hidden}
+.reel{flex:1;position:relative;overflow:hidden;background:rgba(0,0,0,.3)}
+.reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:25%;z-index:3;pointer-events:none}
+.reel::before{top:0;background:linear-gradient(180deg,rgba(10,14,26,.7),transparent)}
+.reel::after{bottom:0;background:linear-gradient(0deg,rgba(10,14,26,.7),transparent)}
+.strip{position:absolute;top:0;left:0;width:100%;will-change:transform}
+.strip.blur{filter:blur(2px)}
+.sym{display:flex;align-items:center;justify-content:center;font-size:clamp(30px,8vw,44px);position:relative;transition:background .2s}
+.sym.glow{background:rgba(255,215,0,.15);box-shadow:inset 0 0 20px rgba(255,215,0,.3)}
+.sym .mul{position:absolute;bottom:2px;right:4px;font-size:10px;font-weight:900;color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,.8)}
+
+/* Center line indicator */
+.reels::after{content:'';position:absolute;left:0;right:0;top:calc(var(--sym-h) - 1px);height:2px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.4),transparent);z-index:4;pointer-events:none}
+.reels::before{content:'';position:absolute;left:0;right:0;top:calc(var(--sym-h)*2 - 1px);height:2px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.15),transparent);z-index:4;pointer-events:none}
+
+/* Payline Canvas */
+.plcvs{position:absolute;top:0;left:22px;z-index:5;pointer-events:none}
+
+/* Win popup */
+.wpop{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;pointer-events:none;opacity:0;transition:opacity .3s}
+.wpop.sh{opacity:1}
+.wpop .wl{font-family:'Lilita One',cursive;font-size:18px;color:rgba(255,255,255,.8);letter-spacing:4px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.wpop .wa{font-family:'Lilita One',cursive;font-size:48px;background:linear-gradient(180deg,#ffe44d,#ff8c00,#ff5500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));line-height:1.1}
+.wpop .wm{font-size:14px;color:#7df56a;margin-top:4px;font-weight:700;text-shadow:0 0 10px rgba(125,245,106,.5)}
+.wpop.big .wl{font-size:24px;color:#ffe44d}
+.wpop.big .wa{font-size:60px}
+.wpop.epic .wl{font-size:28px;background:linear-gradient(90deg,#ff4444,#ffe44d,#44ff44,#44aaff,#ff44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wpop.epic .wa{font-size:70px}
+
+/* Multiplier popup */
+.mpop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:12;pointer-events:none;opacity:0;transform:scale(0);transition:opacity .3s,transform .4s cubic-bezier(.175,.885,.32,1.275)}
+.mpop.sh{opacity:1;transform:scale(1)}
+.mpop span{font-family:'Lilita One',cursive;font-size:64px;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.8),0 4px 12px rgba(0,0,0,.5)}
+
+/* Controls */
+.ctl{flex-shrink:0;padding:8px 10px 4px;display:flex;align-items:center;gap:6px}
+.bs,.ws{flex:1;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px}
+.sl{font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.bv{font-size:clamp(14px,4vw,18px);font-weight:900;margin-top:1px}
+.wv{font-size:clamp(14px,4vw,18px);font-weight:900;color:#7df56a;margin-top:1px}
+.bc{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px}
+.bb{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bb:active{transform:scale(.85);background:rgba(255,200,0,.2)}
+.sw{display:flex;align-items:center;justify-content:center;margin:0 4px}
+.sb{width:clamp(52px,14vw,64px);height:clamp(52px,14vw,64px);border-radius:50%;background:linear-gradient(145deg,#ffe44d,#ff8c00,#e65100);border:3px solid rgba(255,255,255,.3);cursor:pointer;box-shadow:0 0 20px rgba(255,200,0,.3),0 4px 16px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;transition:.15s;font-family:'Lilita One',cursive;font-size:clamp(12px,3.5vw,16px);color:#fff;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sb:active{transform:scale(.92)}
+.sb.sp{animation:spr .6s linear infinite;pointer-events:none;opacity:.7}
+.sb.dis{opacity:.4;pointer-events:none}
+@keyframes spr{to{transform:rotate(360deg)}}
+
+/* Toolbar */
+.tbr{flex-shrink:0;display:flex;justify-content:center;gap:6px;padding:4px 10px}
+.bt{padding:4px 12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:10px;font-weight:700;cursor:pointer;font-family:Inter;letter-spacing:.5px}
+.bt.ac{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3);color:#ffd700}
+.bt:active{transform:scale(.93)}
+
+/* Buy Bonus */
+.buy-wrap{flex-shrink:0;display:flex;justify-content:center;gap:6px;padding:2px 10px 6px}
+.buy-btn{padding:6px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,100,0,.08));border:1px solid rgba(255,215,0,.25);color:#ffd700;font-size:11px;font-weight:800;cursor:pointer;font-family:Inter;letter-spacing:.5px;text-transform:uppercase}
+.buy-btn:active{transform:scale(.93)}
+.buy-btn.dis{opacity:.35;pointer-events:none}
+.buy-btn .cost{color:#7df56a;margin-left:4px}
+
+/* FSI Overlay */
+.fsi{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .4s}
+.fsi.sh{opacity:1;pointer-events:auto}
+.fsi-title{font-family:'Lilita One',cursive;font-size:32px;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.5);letter-spacing:4px;animation:fsiPulse 1s ease infinite alternate}
+.fsi-count{font-family:'Lilita One',cursive;font-size:80px;background:linear-gradient(180deg,#ffe44d,#ff5500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
+.fsi-sub{font-size:16px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:3px;margin-top:4px}
+@keyframes fsiPulse{to{text-shadow:0 0 50px rgba(255,215,0,.8);transform:scale(1.05)}}
+
+/* Paytable Modal */
+.ptm{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:none;overflow-y:auto;padding:20px}
+.ptm.sh{display:block}
+.ptm h2{font-family:'Lilita One',cursive;text-align:center;font-size:22px;color:#ffd700;margin-bottom:16px}
+.ptm .close{position:fixed;top:10px;right:16px;font-size:24px;cursor:pointer;color:#fff;z-index:61}
+.pt-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.pt-sym{font-size:28px;width:40px;text-align:center}
+.pt-name{font-weight:700;font-size:12px;color:rgba(255,255,255,.6);width:70px}
+.pt-pays{display:flex;gap:8px;font-size:11px;font-weight:600}
+.pt-pays span{color:#ffe44d}
+.pt-lines{margin-top:16px}
+.pt-lines h3{text-align:center;font-size:14px;color:#ffd700;margin-bottom:10px}
+.pt-line{display:flex;align-items:center;gap:6px;padding:4px 12px;font-size:12px}
+.pt-dot{width:12px;height:12px;border-radius:50%}
+.pt-pat{display:flex;gap:2px}
+.pt-pat span{width:16px;height:16px;border-radius:3px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900}
+.pt-pat span.on{background:var(--c);color:#000}
+
+/* Screen shake */
+.shk{animation:shk .4s ease}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-.5deg)}75%{transform:translateX(4px) rotate(.5deg)}}
+
+@media(max-height:640px){
+  .hdr{padding:4px 8px}
+  .machine{margin:2px 6px}
+  .ctl{padding:4px 8px 2px}
+  .tbr{padding:2px 8px}
+  .buy-wrap{padding:2px 8px 4px}
+}
+</style>
+</head>
+<body>
+<div id="G">
+  <div class="hdr">
+    <div class="bbk" id="bkBtn">←</div>
+    <div class="ttl">FRUIT ROYALE</div>
+    <div class="bal"><span id="bVal">1000.00</span> USDT</div>
+  </div>
+  <div class="fsb" id="fsB"><span>🎰 FREE SPINS</span><span class="fc" id="fsC">10</span><span class="fm">×<span id="fsM">1</span></span></div>
+  <div class="machine" id="mach">
+    <div class="pl-wrap">
+      <div class="pl-col" id="plL"></div>
+      <div class="reels" id="reelsBox"></div>
+      <div class="pl-col" id="plR"></div>
+    </div>
+    <canvas class="plcvs" id="plCvs"></canvas>
+    <div class="wpop" id="wPop"><div class="wl">WIN</div><div class="wa" id="wPA">0</div><div class="wm" id="wPM"></div></div>
+    <div class="mpop" id="mPop"><span id="mPT">×2</span></div>
+  </div>
+  <div class="ctl">
+    <div class="bs"><div class="sl">Total Bet</div><div class="bv" id="btV">9.00</div><div class="bc"><div class="bb" id="bM">−</div><div class="bb" id="bP">+</div></div></div>
+    <div class="sw"><button class="sb" id="spB">SPIN</button></div>
+    <div class="ws"><div class="sl">Win</div><div class="wv" id="wVal">0.00</div></div>
+  </div>
+  <div class="tbr">
+    <div class="bt" id="tbB">⚡ TURBO</div>
+    <div class="bt" id="auB">♾ AUTO</div>
+    <div class="bt" id="sndB">🔊</div>
+    <div class="bt" id="ptB">📋 INFO</div>
+  </div>
+  <div class="buy-wrap">
+    <button class="buy-btn" id="buyB">🎁 BUY FREE SPINS<span class="cost" id="buyCost">900.00</span></button>
+  </div>
+  <div class="fsi" id="fsiO"><div class="fsi-title">FREE SPINS</div><div class="fsi-count" id="fsiC">10</div><div class="fsi-sub">SPINS WON!</div></div>
+  <div class="ptm" id="ptM"><div class="close" id="ptX">✕</div></div>
+  <canvas class="overlay" id="confCvs"></canvas>
+</div>
+
+<script>
+// ═══ CONSTANTS ═══
+const REELS=5,ROWS=3,NLINES=9;
+const SYM=[
+  {name:'Cherry', em:'🍒',pay:[0,0,5,20,60],   w:8,c:'#ff4444'},
+  {name:'Lemon',  em:'🍋',pay:[0,0,5,20,60],   w:8,c:'#ffd700'},
+  {name:'Orange', em:'🍊',pay:[0,0,8,35,100],  w:6,c:'#ff8c00'},
+  {name:'Grape',  em:'🍇',pay:[0,0,8,35,100],  w:6,c:'#9b59b6'},
+  {name:'Melon',  em:'🍉',pay:[0,0,15,60,200], w:5,c:'#2ecc71'},
+  {name:'Bell',   em:'🔔',pay:[0,0,25,100,400],w:4,c:'#f1c40f'},
+  {name:'Seven',  em:'7️⃣',pay:[0,0,50,250,1000],w:3,c:'#e74c3c'},
+  {name:'Wild',   em:'🃏',pay:[0,0,100,500,2000],w:2,c:'#00e5ff',wild:true},
+  {name:'Scatter',em:'⭐',pay:[0,0,2,10,50],   w:2,c:'#ff69b4',scat:true},
+];
+const WILD=7,SCAT=8;
+const LINES=[
+  [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],
+  [0,1,2,1,0],[2,1,0,1,2],[1,0,0,0,1],
+  [1,2,2,2,1],[0,0,1,2,2],[2,2,1,0,0]
+];
+const LCOL=['#ff4444','#ffd700','#2ecc71','#ff69b4','#9b59b6','#00e5ff','#ff8c00','#ff6b6b','#88ddaa'];
+const BETS=[0.10,0.20,0.50,1.00,2.00,5.00];
+const TAPE_LEN=35;
+
+// Weighted pool for random symbol selection
+let pool=[];
+SYM.forEach((s,i)=>{for(let j=0;j<s.w;j++)pool.push(i)});
+
+// ═══ SEEDED PRNG ═══
+let _seed=Date.now()^0xDEADBEEF;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let gameRand=mulberry32(_seed);
+function setSeed(s){_seed=s;gameRand=mulberry32(_seed)}
+const _urlSeed=new URLSearchParams(window.location.search).get('seed');
+if(_urlSeed)setSeed(parseInt(_urlSeed));
+
+function rndSym(){return pool[Math.floor(gameRand()*pool.length)]}
+
+// ═══ STATE ═══
+const _urlBal=new URLSearchParams(window.location.search).get('bal');
+let state='IDLE',bal=_urlBal?parseFloat(_urlBal):1000,bIdx=3,bet=BETS[bIdx];
+let grid=Array.from({length:REELS},()=>Array(ROWS).fill(0));
+let turbo=false,autoP=false,sndOn=true;
+let fsLeft=0,fsMul=1,fsTotalWin=0;
+let stoppedCount=0;
+let symH=80;
+
+// ═══ SOUND ENGINE ═══
+let audioCtx=null;
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
+function playNote(freq,dur,type='sine',vol=0.08){
+  if(!audioCtx||!sndOn)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.setValueAtTime(freq,audioCtx.currentTime);
+  g.gain.setValueAtTime(vol,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+  o.connect(g).connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+}
+function sndSpin(){playNote(300,.15,'sawtooth',.05);setTimeout(()=>playNote(450,.1,'sawtooth',.04),80)}
+function sndStop(i){playNote(200+i*80,.08,'square',.06)}
+function sndWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playNote(f,.2,'sine',.07),i*100))}
+function sndBigWin(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playNote(f,.3,'triangle',.08),i*120))}
+function sndScatter(){playNote(880,.3,'sine',.06);setTimeout(()=>playNote(1100,.3,'sine',.06),150)}
+function sndClick(){playNote(600,.04,'square',.03)}
+
+// ═══ CONFETTI ═══
+const confCvs=document.getElementById('confCvs');
+const confCtx=confCvs.getContext('2d');
+let confetti=[],confAnim=null;
+const CONF_COLORS=['#ff4444','#ffd700','#2ecc71','#ff69b4','#9b59b6','#00e5ff','#ff8c00','#fff'];
+function resizeConfetti(){confCvs.width=confCvs.offsetWidth;confCvs.height=confCvs.offsetHeight}
+function startConfetti(n=150){
+  resizeConfetti();confetti=[];
+  for(let i=0;i<n;i++)confetti.push({
+    x:Math.random()*confCvs.width,y:-Math.random()*confCvs.height*.5,
+    w:4+Math.random()*6,h:3+Math.random()*5,
+    c:CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)],
+    vx:(Math.random()-.5)*3,vy:1.5+Math.random()*3,
+    rot:Math.random()*Math.PI*2,rv:(Math.random()-.5)*.15,
+    life:1,decay:.002+Math.random()*.003
+  });
+  if(confAnim)cancelAnimationFrame(confAnim);
+  (function loop(){
+    confCtx.clearRect(0,0,confCvs.width,confCvs.height);
+    let alive=false;
+    confetti.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.rot+=p.rv;p.life-=p.decay;
+      if(p.life<=0||p.y>confCvs.height+20)return;
+      alive=true;
+      confCtx.save();confCtx.translate(p.x,p.y);confCtx.rotate(p.rot);
+      confCtx.globalAlpha=p.life;confCtx.fillStyle=p.c;
+      confCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);confCtx.restore();
+    });
+    if(alive)confAnim=requestAnimationFrame(loop);
+    else{confCtx.clearRect(0,0,confCvs.width,confCvs.height);confAnim=null}
+  })();
+}
+
+// ═══ LAYOUT ═══
+const reelsBox=document.getElementById('reelsBox');
+const plCvs=document.getElementById('plCvs');
+const plCtx=plCvs.getContext('2d');
+let reelEls=[],stripEls=[];
+let reelX=0,reelW=0;
+
+function buildReels(){
+  reelsBox.innerHTML='';reelEls=[];stripEls=[];
+  for(let c=0;c<REELS;c++){
+    const reel=document.createElement('div');reel.className='reel';reel.id='reel'+c;
+    const strip=document.createElement('div');strip.className='strip';
+    reel.appendChild(strip);reelsBox.appendChild(reel);
+    reelEls.push(reel);stripEls.push(strip);
+  }
+}
+
+function calcLayout(){
+  const box=reelsBox.getBoundingClientRect();
+  reelW=box.width/REELS;
+  symH=box.height/ROWS;
+  document.documentElement.style.setProperty('--sym-h',symH+'px');
+  // Payline canvas
+  plCvs.width=box.width;plCvs.height=box.height;
+  plCvs.style.width=box.width+'px';plCvs.style.height=box.height+'px';
+  reelX=box.left-reelsBox.parentElement.getBoundingClientRect().left+reelsBox.offsetLeft;
+  // Set symbol height on existing syms
+  document.querySelectorAll('.sym').forEach(s=>s.style.height=symH+'px');
+}
+
+function buildPaylineMarkers(){
+  const lCol=document.getElementById('plL'),rCol=document.getElementById('plR');
+  lCol.innerHTML='';rCol.innerHTML='';
+  for(let i=0;i<NLINES;i++){
+    const m=document.createElement('div');
+    m.className='pl-m';m.textContent=i+1;
+    m.style.cssText=`color:${LCOL[i]};border-color:${LCOL[i]};--c:${LCOL[i]}`;
+    m.dataset.line=i;
+    if(i<5)lCol.appendChild(m);else rCol.appendChild(m);
+  }
+}
+
+function mkSymEl(id){
+  const d=document.createElement('div');d.className='sym';d.dataset.id=id;
+  d.textContent=SYM[id].em;d.style.height=symH+'px';
+  return d;
+}
+
+function initGrid(){
+  for(let c=0;c<REELS;c++){
+    stripEls[c].innerHTML='';
+    for(let r=0;r<ROWS;r++){
+      const id=rndSym();grid[c][r]=id;
+      stripEls[c].appendChild(mkSymEl(id));
+    }
+    stripEls[c].style.transform='translateY(0)';
+  }
+}
+
+// ═══ SPIN SYSTEM ═══
+function spin(){
+  if(state!=='IDLE')return;
+  const totalBet=bet*NLINES;
+  const inFS=fsLeft>0;
+  if(!inFS){if(bal<totalBet)return;bal-=totalBet;updBal();fsTotalWin=0}
+  initAudio();sndSpin();
+  state='SPINNING';stoppedCount=0;
+  document.getElementById('spB').classList.add('sp');
+  if(!inFS)updWin(0);hideWP();clearPaylines();clearGlow();updBuyBtns();
+
+  // Generate results
+  const results=[];
+  for(let c=0;c<REELS;c++){
+    results[c]=[];
+    for(let r=0;r<ROWS;r++) results[c][r]=rndSym();
+  }
+
+  // Build and animate each reel
+  for(let c=0;c<REELS;c++){
+    const strip=stripEls[c];
+    strip.style.transition='none';
+    strip.style.transform='translateY(0)';
+    strip.innerHTML='';
+    // Random tape symbols
+    const tapeLen=turbo?18:TAPE_LEN;
+    for(let i=0;i<tapeLen;i++) strip.appendChild(mkSymEl(rndSym()));
+    // Result symbols at end
+    for(let r=0;r<ROWS;r++) strip.appendChild(mkSymEl(results[c][r]));
+
+    strip.offsetHeight; // force reflow
+    const targetY=-(tapeLen*symH);
+    const dur=turbo?.4+c*.15:.8+c*.3;
+
+    strip.classList.add('blur');
+    strip.style.transition=`transform ${dur}s cubic-bezier(0.1,0.7,0.2,1.03)`;
+    strip.style.transform=`translateY(${targetY}px)`;
+
+    // Remove blur before stop
+    setTimeout(()=>strip.classList.remove('blur'),dur*650);
+
+    ((col,duration)=>{
+      const handler=()=>{
+        strip.removeEventListener('transitionend',handler);
+        grid[col]=results[col].slice();
+        sndStop(col);
+        onReelStop(col);
+      };
+      strip.addEventListener('transitionend',handler);
+      // Fallback timeout
+      setTimeout(()=>{
+        grid[col]=results[col].slice();
+        if(stoppedCount<=col)onReelStop(col);
+      },(duration+.1)*1000);
+    })(c,dur);
+  }
+}
+
+function onReelStop(col){
+  stoppedCount++;
+  // Check for scatter anticipation
+  if(stoppedCount>=3){
+    let sc=0;
+    for(let c=0;c<stoppedCount;c++)for(let r=0;r<ROWS;r++)if(grid[c][r]===SCAT)sc++;
+    if(sc>=2&&stoppedCount<REELS)sndScatter();
+  }
+  if(stoppedCount===REELS){
+    document.getElementById('spB').classList.remove('sp');
+    evaluateWins();
+  }
+}
+
+// ═══ WIN DETECTION ═══
+function evaluateWins(){
+  state='RESOLVING';
+  const wins=[];
+
+  // Check paylines
+  for(let li=0;li<NLINES;li++){
+    const line=LINES[li];
+    const syms=line.map((row,col)=>grid[col][row]);
+
+    // Find base symbol (first non-wild non-scatter from left)
+    let baseSym=-1;
+    for(let i=0;i<REELS;i++){
+      if(syms[i]!==WILD&&syms[i]!==SCAT){baseSym=syms[i];break}
+      if(syms[i]===WILD&&baseSym===-1)baseSym=WILD;
+    }
+    if(baseSym===-1)continue;
+
+    // Count matching from left
+    let cnt=0;
+    for(let c=0;c<REELS;c++){
+      if(syms[c]===baseSym||syms[c]===WILD)cnt++;
+      else break;
+    }
+    if(cnt>=3){
+      wins.push({line:li,cnt,sym:baseSym,pay:SYM[baseSym].pay[cnt-1]*bet,cells:line.slice(0,cnt).map((row,c)=>[c,row])});
+    }
+  }
+
+  // Check scatters (anywhere)
+  let scatCells=[];
+  for(let c=0;c<REELS;c++)for(let r=0;r<ROWS;r++)if(grid[c][r]===SCAT)scatCells.push([c,r]);
+  const scatCnt=scatCells.length;
+  if(scatCnt>=3){
+    wins.push({line:-1,cnt:scatCnt,sym:SCAT,pay:SYM[SCAT].pay[scatCnt-1]*bet*NLINES,cells:scatCells,scatter:true});
+  }
+
+  if(wins.length===0){
+    state='IDLE';
+    updBuyBtns();
+    if(fsLeft>0){fsLeft--;updFS();setTimeout(()=>{if(fsLeft>0)spin();else endFS()},600)}
+    else if(autoP)setTimeout(spin,800);
+    return;
+  }
+
+  // Calculate total win
+  let totalWin=wins.reduce((s,w)=>s+w.pay,0);
+
+  // Roll multiplier
+  const mul=rollMul();
+  totalWin*=mul;
+
+  // Display wins
+  showWins(wins,totalWin,mul,scatCnt);
+}
+
+function rollMul(){
+  const r=gameRand();
+  if(fsLeft>0){
+    if(r<.03)return 10;if(r<.12)return 5;if(r<.35)return 2;return 1;
+  }
+  if(r<.01)return 10;if(r<.04)return 5;if(r<.12)return 2;return 1;
+}
+
+// ═══ WIN DISPLAY ═══
+let winCycleTimer=null;
+
+function showWins(wins,totalWin,mul,scatCnt){
+  // Glow winning symbols
+  wins.forEach(w=>{
+    w.cells.forEach(([c,r])=>{
+      const idx=TAPE_LEN+(turbo?18-TAPE_LEN:0);
+      // Find the sym element in the strip (last ROWS elements)
+      const strip=stripEls[c];
+      const symEls=strip.querySelectorAll('.sym');
+      const tapeLen=turbo?18:TAPE_LEN;
+      const el=symEls[tapeLen+r];
+      if(el)el.classList.add('glow');
+    });
+  });
+
+  // Draw paylines
+  drawPaylines(wins);
+
+  // Light up payline markers
+  wins.forEach(w=>{
+    if(w.line>=0){
+      const markers=document.querySelectorAll('.pl-m');
+      markers.forEach(m=>{if(parseInt(m.dataset.line)===w.line)m.classList.add('lit')});
+    }
+  });
+
+  // Show multiplier popup if > 1
+  if(mul>1){
+    const mpop=document.getElementById('mPop');
+    document.getElementById('mPT').textContent='×'+mul;
+    mpop.classList.add('sh');
+    sndBigWin();
+    setTimeout(()=>mpop.classList.remove('sh'),1200);
+  }
+
+  // Show win popup
+  const delay=mul>1?1400:200;
+  setTimeout(()=>{
+    const ratio=totalWin/(bet*NLINES);
+    if(ratio>=20)sndBigWin();else sndWin();
+    // Credit winnings
+    bal+=totalWin;updBal();
+    fsTotalWin+=totalWin;
+    showWP(totalWin,ratio,mul);
+    updWin(fsLeft>0?fsTotalWin:totalWin);
+
+    // Confetti for big wins
+    if(ratio>=10)startConfetti(ratio>=50?250:100);
+
+    // Handle free spins trigger
+    const hasScatter=wins.find(w=>w.scatter);
+    const winShowTime=ratio>=20?2500:1500;
+
+    setTimeout(()=>{
+      hideWP();clearPaylines();clearGlow();clearMarkers();
+
+      if(hasScatter&&fsLeft===0){
+        const spins=scatCnt>=5?20:scatCnt>=4?15:10;
+        showFSIntro(spins,()=>{
+          fsLeft=spins;fsMul=1;updFS();
+          document.getElementById('fsB').classList.add('sh');
+          state='IDLE';spin();
+        });
+        return;
+      }
+
+      if(fsLeft>0){
+        fsLeft--;updFS();
+        state='IDLE';
+        setTimeout(()=>{if(fsLeft>0)spin();else endFS()},400);
+      }else{
+        state='IDLE';updBuyBtns();
+        if(autoP)setTimeout(spin,800);
+      }
+    },winShowTime);
+  },delay);
+}
+
+function drawPaylines(wins){
+  plCtx.clearRect(0,0,plCvs.width,plCvs.height);
+  wins.forEach(w=>{
+    if(w.line<0)return; // scatter, no line
+    const line=LINES[w.line];
+    const color=LCOL[w.line];
+    plCtx.save();
+    plCtx.strokeStyle=color;plCtx.lineWidth=3;
+    plCtx.shadowColor=color;plCtx.shadowBlur=12;plCtx.globalAlpha=.8;
+    plCtx.beginPath();
+    for(let c=0;c<w.cnt;c++){
+      const x=c*reelW+reelW/2;
+      const y=line[c]*symH+symH/2;
+      if(c===0)plCtx.moveTo(x,y);else plCtx.lineTo(x,y);
+    }
+    plCtx.stroke();
+    // Win amount at end of line
+    const lastC=w.cnt-1;
+    plCtx.shadowBlur=0;plCtx.globalAlpha=1;
+    plCtx.font='bold 12px Inter';plCtx.textAlign='center';
+    plCtx.fillStyle='#fff';
+    plCtx.fillText('+'+w.pay.toFixed(2),lastC*reelW+reelW/2,line[lastC]*symH+symH/2-symH*.35);
+    plCtx.restore();
+  });
+}
+
+function clearPaylines(){plCtx.clearRect(0,0,plCvs.width,plCvs.height)}
+function clearGlow(){document.querySelectorAll('.sym.glow').forEach(s=>s.classList.remove('glow'))}
+function clearMarkers(){document.querySelectorAll('.pl-m.lit').forEach(m=>m.classList.remove('lit'))}
+
+function showWP(amt,ratio,mul){
+  const wp=document.getElementById('wPop');
+  const tier=ratio>=50?'EPIC WIN':ratio>=20?'BIG WIN':'WIN';
+  wp.querySelector('.wl').textContent=tier;
+  document.getElementById('wPA').textContent=amt.toFixed(2);
+  document.getElementById('wPM').textContent=mul>1?`×${mul} MULTIPLIER`:'';
+  wp.className='wpop sh'+(ratio>=50?' epic':ratio>=20?' big':'');
+}
+function hideWP(){document.getElementById('wPop').className='wpop'}
+
+// ═══ FREE SPINS ═══
+function showFSIntro(count,cb){
+  const el=document.getElementById('fsiO');
+  document.getElementById('fsiC').textContent=count;
+  el.classList.add('sh');
+  sndBigWin();
+  document.getElementById('G').classList.add('shk');
+  setTimeout(()=>document.getElementById('G').classList.remove('shk'),400);
+  setTimeout(()=>{el.classList.remove('sh');if(cb)cb()},2500);
+}
+
+function endFS(){
+  document.getElementById('fsB').classList.remove('sh');
+  if(fsTotalWin>0){
+    const ratio=fsTotalWin/(bet*NLINES);
+    showWP(fsTotalWin,ratio,fsMul);
+    updWin(fsTotalWin);
+    if(ratio>=10)startConfetti(ratio>=50?250:100);
+    setTimeout(()=>{hideWP();fsTotalWin=0;state='IDLE';updBuyBtns();if(autoP)setTimeout(spin,800)},3000);
+  }else{
+    state='IDLE';updBuyBtns();
+    if(autoP)setTimeout(spin,800);
+  }
+}
+
+function updFS(){
+  document.getElementById('fsC').textContent=fsLeft;
+  document.getElementById('fsM').textContent=fsMul;
+}
+
+// ═══ BUY BONUS ═══
+function buyBonus(){
+  if(state!=='IDLE'||fsLeft>0)return;
+  const cost=bet*NLINES*100;
+  if(bal<cost)return;
+  bal-=cost;updBal();initAudio();
+  fsTotalWin=0;updWin(0);
+  updBuyBtns();
+  showFSIntro(10,()=>{
+    fsLeft=10;fsMul=1;updFS();
+    document.getElementById('fsB').classList.add('sh');
+    state='IDLE';spin();
+  });
+}
+
+function updBuyBtns(){
+  const cost=bet*NLINES*100;
+  document.getElementById('buyCost').textContent=cost.toFixed(2);
+  const dis=state!=='IDLE'||fsLeft>0||bal<cost;
+  document.getElementById('buyB').classList.toggle('dis',dis);
+}
+
+// ═══ UI HELPERS ═══
+function updBal(){document.getElementById('bVal').textContent=bal.toFixed(2);try{window.parent.postMessage({type:'balSync',bal:bal.toFixed(2)},'*')}catch(e){}}
+function updWin(v){document.getElementById('wVal').textContent=v.toFixed(2)}
+function updBet(){
+  document.getElementById('btV').textContent=(bet*NLINES).toFixed(2);
+  updBuyBtns();
+}
+
+// ═══ PAYTABLE ═══
+function buildPaytable(){
+  const m=document.getElementById('ptM');
+  let html='<div class="close" id="ptX">✕</div><h2>PAYTABLE</h2>';
+  SYM.forEach(s=>{
+    html+=`<div class="pt-row"><div class="pt-sym">${s.em}</div><div class="pt-name">${s.name}${s.wild?' (WILD)':''}${s.scat?' (SCATTER)':''}</div><div class="pt-pays">`;
+    for(let i=2;i<5;i++){
+      if(s.pay[i]>0)html+=`<span>${i+1}×${s.pay[i]}</span>`;
+    }
+    html+='</div></div>';
+  });
+  html+='<div class="pt-lines"><h3>PAYLINES</h3>';
+  LINES.forEach((line,li)=>{
+    html+=`<div class="pt-line"><div class="pt-dot" style="background:${LCOL[li]}"></div><span style="color:${LCOL[li]};font-weight:700;width:16px">${li+1}</span><div class="pt-pat">`;
+    for(let c=0;c<REELS;c++){
+      for(let r=0;r<ROWS;r++){
+        html+=`<span class="${line[c]===r?'on':''}" style="--c:${LCOL[li]}">${line[c]===r?'●':''}</span>`;
+      }
+      if(c<REELS-1)html+='<span style="width:2px;background:none"></span>';
+    }
+    html+='</div></div>';
+  });
+  html+='</div><div style="height:40px"></div>';
+  m.innerHTML=html;
+  document.getElementById('ptX').addEventListener('click',()=>m.classList.remove('sh'));
+}
+
+// ═══ EVENT HANDLERS ═══
+document.getElementById('spB').addEventListener('click',()=>{initAudio();spin()});
+document.getElementById('bM').addEventListener('click',()=>{if(state!=='IDLE'||fsLeft>0)return;sndClick();bIdx=Math.max(0,bIdx-1);bet=BETS[bIdx];updBet()});
+document.getElementById('bP').addEventListener('click',()=>{if(state!=='IDLE'||fsLeft>0)return;sndClick();bIdx=Math.min(BETS.length-1,bIdx+1);bet=BETS[bIdx];updBet()});
+document.getElementById('tbB').addEventListener('click',function(){turbo=!turbo;this.classList.toggle('ac',turbo);sndClick()});
+document.getElementById('auB').addEventListener('click',function(){autoP=!autoP;this.classList.toggle('ac',autoP);sndClick();if(autoP&&state==='IDLE'&&fsLeft===0)spin()});
+document.getElementById('sndB').addEventListener('click',function(){sndOn=!sndOn;this.classList.toggle('ac',!sndOn);this.textContent=sndOn?'🔊':'🔇'});
+document.getElementById('ptB').addEventListener('click',()=>{document.getElementById('ptM').classList.add('sh')});
+document.getElementById('buyB').addEventListener('click',buyBonus);
+document.getElementById('bkBtn').addEventListener('click',()=>{
+  try{window.parent.postMessage('back','*')}catch(e){}
+  try{window.history.back()}catch(e){}
+});
+
+// Prevent zoom
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+
+// ═══ INIT ═══
+buildReels();
+buildPaylineMarkers();
+buildPaytable();
+requestAnimationFrame(()=>{
+  calcLayout();initGrid();updBet();updBuyBtns();updBal();
+});
+window.addEventListener('resize',()=>{calcLayout()});
+// ═══ SEED LISTENER ═══
+window.addEventListener('message',e=>{
+  if(e.data&&typeof e.data==='object'&&e.data.type==='setSeed'&&e.data.seed) setSeed(parseInt(e.data.seed));
+});
+</script>
+</body>
+</html>

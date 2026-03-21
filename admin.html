@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JetCasino Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0e1015;
+  --bg-card: #181b22;
+  --bg-elevated: #252830;
+  --accent: #c6ff00;
+  --green: #00e676;
+  --red: #ff4757;
+  --blue: #448aff;
+  --orange: #ff9100;
+  --purple: #b388ff;
+  --text: #fff;
+  --text2: rgba(255,255,255,0.65);
+  --text3: rgba(255,255,255,0.35);
+  --border: rgba(255,255,255,0.08);
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:14px; }
+#app { max-width:600px; margin:0 auto; padding:12px; min-height:100vh; }
+
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; padding:12px 0 16px; }
+.header h1 { font-size:20px; font-weight:800; }
+.header h1 span { color:var(--accent); }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; overflow-x:auto; margin-bottom:16px; padding-bottom:4px; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { padding:8px 16px; border:1px solid var(--border); border-radius:50px; background:transparent; color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .2s; }
+.tab.active { background:var(--accent); color:#000; border-color:var(--accent); }
+
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:16px; }
+.stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; }
+.stat-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+.stat-val { font-size:20px; font-weight:800; }
+.stat-val.green { color:var(--green); }
+.stat-val.red { color:var(--red); }
+.stat-val.blue { color:var(--blue); }
+.stat-val.accent { color:var(--accent); }
+
+/* Card */
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; }
+.tbl th { text-align:left; font-size:11px; color:var(--text3); text-transform:uppercase; padding:8px 6px; border-bottom:1px solid var(--border); }
+.tbl td { padding:8px 6px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+.tbl tr:last-child td { border-bottom:none; }
+
+/* Buttons */
+.btn { padding:8px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.btn-accent { background:var(--accent); color:#000; }
+.btn-green { background:var(--green); color:#000; }
+.btn-red { background:var(--red); color:#fff; }
+.btn-blue { background:var(--blue); color:#fff; }
+.btn-ghost { background:rgba(255,255,255,0.06); color:var(--text2); }
+.btn:active { transform:scale(0.97); }
+.btn-sm { padding:5px 10px; font-size:12px; }
+
+/* Input */
+.inp { background:var(--bg-elevated); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:white; font-size:14px; outline:none; width:100%; }
+.inp::placeholder { color:var(--text3); }
+.inp-row { display:flex; gap:8px; margin-bottom:8px; }
+.inp-group { margin-bottom:10px; }
+.inp-label { font-size:11px; color:var(--text3); margin-bottom:4px; display:block; }
+
+/* Badge */
+.badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-green { background:rgba(0,230,118,0.15); color:var(--green); }
+.badge-red { background:rgba(255,71,87,0.15); color:var(--red); }
+.badge-blue { background:rgba(68,138,255,0.15); color:var(--blue); }
+.badge-accent { background:rgba(198,255,0,0.15); color:var(--accent); }
+
+/* User row */
+.user-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.user-row:last-child { border-bottom:none; }
+.user-av { width:36px; height:36px; border-radius:50%; background:var(--bg-elevated); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.user-info { flex:1; min-width:0; }
+.user-name { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-sub { font-size:12px; color:var(--text3); }
+.user-bal { font-weight:700; color:var(--accent); font-size:14px; }
+
+/* Toast */
+#toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--bg-elevated); color:white; padding:10px 20px; border-radius:50px; font-size:13px; font-weight:600; z-index:999; transition:transform .3s; border:1px solid var(--border); }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+/* Pagination */
+.pager { display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 0; }
+
+/* Section */
+.section { display:none; }
+.section.active { display:block; }
+
+/* Loading */
+#loading { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; }
+#loading .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Modal */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
+.modal-bg.active { display:flex; }
+.modal { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; width:100%; max-width:400px; max-height:80vh; overflow-y:auto; }
+.modal h3 { font-size:16px; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="app" style="display:none;">
+  <div class="header">
+    <h1><span>Jet</span>Casino <span style="font-size:13px;color:var(--text3);font-weight:500;">Admin</span></h1>
+  </div>
+
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" onclick="switchTab('dashboard',this)">Дашборд</button>
+    <button class="tab" onclick="switchTab('users',this)">Игроки</button>
+    <button class="tab" onclick="switchTab('promos',this)">Промокоды</button>
+    <button class="tab" onclick="switchTab('spins',this)">Фри-спины</button>
+    <button class="tab" onclick="switchTab('txs',this)">Транзакции</button>
+  </div>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="section active" id="sec-dashboard">
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
+  <!-- ═══ USERS ═══ -->
+  <div class="section" id="sec-users">
+    <div class="inp-row" style="margin-bottom:12px;">
+      <input class="inp" id="userSearch" placeholder="Поиск по имени/юзернейму..." oninput="debounceSearch()">
+    </div>
+    <div id="usersList"></div>
+    <div class="pager" id="usersPager"></div>
+  </div>
+
+  <!-- ═══ PROMOS ═══ -->
+  <div class="section" id="sec-promos">
+    <button class="btn btn-accent" onclick="showCreatePromo()" style="margin-bottom:12px;width:100%;">+ Создать промокод</button>
+    <div id="promosList"></div>
+  </div>
+
+  <!-- ═══ FREE SPINS ═══ -->
+  <div class="section" id="sec-spins">
+    <button class="btn btn-green" onclick="showGrantSpins()" style="margin-bottom:12px;width:100%;">+ Выдать фри-спины</button>
+    <div id="spinsList"></div>
+  </div>
+
+  <!-- ═══ TRANSACTIONS ═══ -->
+  <div class="section" id="sec-txs">
+    <div class="inp-row" style="margin-bottom:12px;">
+      <select class="inp" id="txTypeFilter" onchange="loadTxs(0)" style="max-width:160px;">
+        <option value="">Все типы</option>
+        <option value="deposit">Депозиты</option>
+        <option value="withdraw">Выводы</option>
+        <option value="bet">Ставки</option>
+        <option value="win">Выигрыши</option>
+        <option value="promo">Промо</option>
+      </select>
+    </div>
+    <div id="txsList"></div>
+    <div class="pager" id="txsPager"></div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Create Promo Modal -->
+<div class="modal-bg" id="modalPromo">
+  <div class="modal">
+    <h3>Создать промокод</h3>
+    <div class="inp-group">
+      <label class="inp-label">Код</label>
+      <input class="inp" id="pm_code" placeholder="BONUS100">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Тип</label>
+      <select class="inp" id="pm_type">
+        <option value="balance">Баланс (USDT)</option>
+        <option value="free_spins">Фри-спины</option>
+      </select>
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Значение (сумма / кол-во спинов)</label>
+      <input class="inp" id="pm_value" type="number" placeholder="10">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Игра (для фри-спинов)</label>
+      <select class="inp" id="pm_game">
+        <option value="">Не указана</option>
+        <option value="lucky-sweet">Lucky Sweet</option>
+        <option value="chaos-crew">Chaos Crew</option>
+        <option value="fruit-royale">Fruit Royale</option>
+      </select>
+    </div>
+    <div class="inp-row">
+      <div class="inp-group" style="flex:1;">
+        <label class="inp-label">Макс. использований</label>
+        <input class="inp" id="pm_max" type="number" value="100">
+      </div>
+      <div class="inp-group" style="flex:1;">
+        <label class="inp-label">Дней до истечения</label>
+        <input class="inp" id="pm_days" type="number" value="30">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-accent" onclick="createPromo()" style="flex:1;">Создать</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalPromo')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grant Free Spins Modal -->
+<div class="modal-bg" id="modalSpins">
+  <div class="modal">
+    <h3>Выдать фри-спины</h3>
+    <div class="inp-group">
+      <label class="inp-label">Кому</label>
+      <select class="inp" id="fs_target">
+        <option value="all">Всем игрокам</option>
+        <option value="user">Конкретному игроку (UUID)</option>
+      </select>
+    </div>
+    <div class="inp-group" id="fs_uid_wrap" style="display:none;">
+      <label class="inp-label">User ID</label>
+      <input class="inp" id="fs_uid" placeholder="UUID пользователя">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Игра</label>
+      <select class="inp" id="fs_game">
+        <option value="lucky-sweet">Lucky Sweet</option>
+        <option value="chaos-crew">Chaos Crew</option>
+        <option value="fruit-royale">Fruit Royale</option>
+      </select>
+    </div>
+    <div class="inp-row">
+      <div class="inp-group" style="flex:1;">
+        <label class="inp-label">Кол-во спинов</label>
+        <input class="inp" id="fs_count" type="number" value="10">
+      </div>
+      <div class="inp-group" style="flex:1;">
+        <label class="inp-label">Ставка (USDT)</label>
+        <input class="inp" id="fs_bet" type="number" value="1" step="0.1">
+      </div>
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Дней до истечения</label>
+      <input class="inp" id="fs_days" type="number" value="7">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-green" onclick="grantSpins()" style="flex:1;">Выдать</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalSpins')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Balance Modal -->
+<div class="modal-bg" id="modalBalance">
+  <div class="modal">
+    <h3>Корректировка баланса</h3>
+    <div class="inp-group">
+      <label class="inp-label">Игрок</label>
+      <div id="bal_user_info" style="color:var(--text2);font-size:13px;"></div>
+      <input type="hidden" id="bal_uid">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Сумма (+ начисление / - списание)</label>
+      <input class="inp" id="bal_amount" type="number" placeholder="100">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">Причина</label>
+      <input class="inp" id="bal_reason" placeholder="Бонус / Коррекция">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-accent" onclick="adjustBalance()" style="flex:1;">Применить</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalBalance')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══ CONFIG ═══
+const SUPABASE_URL = 'https://klgvhthxvwokdzmlguur.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsZ3ZodGh4dndva2R6bWxndXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDg4NjgsImV4cCI6MjA4OTU4NDg2OH0.BTu5zjF7PrS8GNp6eBLeQpqPY3I2-6Aq8-XshNOrqYw';
+const API_BASE = SUPABASE_URL + '/functions/v1';
+let TOKEN = null;
+
+// ═══ API ═══
+async function api(func, path, body={}) {
+  try {
+    const res = await fetch(`${API_BASE}/${func}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': TOKEN ? 'Bearer '+TOKEN : '',
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.error) { showToast(data.error); return null; }
+    return data;
+  } catch(e) {
+    showToast('Ошибка сети');
+    return null;
+  }
+}
+
+// ═══ AUTH ═══
+async function boot() {
+  const initData = window.Telegram?.WebApp?.initData;
+  if (!initData) {
+    // Dev mode
+    TOKEN = 'dev';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadDashboard();
+    return;
+  }
+
+  try {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+  } catch(e){}
+
+  const data = await api('game-api', '/auth', { initData });
+  if (!data) {
+    document.getElementById('loading').innerHTML = '<div style="text-align:center;color:var(--red);padding:20px;">Ошибка авторизации</div>';
+    return;
+  }
+
+  if (!data.is_admin) {
+    document.getElementById('loading').innerHTML = '<div style="text-align:center;color:var(--red);padding:20px;">Доступ запрещён. Вы не администратор.</div>';
+    return;
+  }
+
+  TOKEN = data.token;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadDashboard();
+}
+
+// ═══ TABS ═══
+function switchTab(tab, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + tab).classList.add('active');
+  btn.classList.add('active');
+
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'users') loadUsers(0);
+  if (tab === 'promos') loadPromos();
+  if (tab === 'spins') loadSpins();
+  if (tab === 'txs') loadTxs(0);
+}
+
+// ═══ DASHBOARD ═══
+async function loadDashboard() {
+  const data = await api('payments-admin', '/admin/stats');
+  if (!data) return;
+  const s = data;
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = [
+    { label: 'Всего игроков', val: s.total_users || 0, cls: 'blue' },
+    { label: 'Активных сегодня', val: s.active_today || 0, cls: 'green' },
+    { label: 'Депозитов (USDT)', val: fmt(s.total_deposits || 0), cls: 'green' },
+    { label: 'Выводов (USDT)', val: fmt(s.total_withdrawals || 0), cls: 'red' },
+    { label: 'Ставок (USDT)', val: fmt(s.total_bets || 0), cls: 'accent' },
+    { label: 'Выигрышей (USDT)', val: fmt(s.total_wins || 0), cls: 'accent' },
+    { label: 'Профит казино', val: fmt(s.house_profit || 0), cls: (s.house_profit||0) >= 0 ? 'green' : 'red' },
+    { label: 'Игр сыграно', val: s.games_played || 0, cls: 'blue' },
+    { label: 'Активных промо', val: s.active_promos || 0, cls: 'accent' },
+    { label: 'Ожид. оплаты', val: s.pending_invoices || 0, cls: 'blue' },
+  ].map(s => `
+    <div class="stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val ${s.cls}">${s.val}</div>
+    </div>
+  `).join('');
+}
+
+// ═══ USERS ═══
+let usersPage = 0;
+let searchTimer = null;
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadUsers(0), 400);
+}
+
+async function loadUsers(page) {
+  usersPage = page;
+  const search = document.getElementById('userSearch').value.trim();
+  const data = await api('payments-admin', '/admin/users', { page, search });
+  if (!data) return;
+
+  const list = document.getElementById('usersList');
+  list.innerHTML = (data.users || []).map(u => `
+    <div class="user-row">
+      <div class="user-av">${u.tg_photo_url ? `<img src="${u.tg_photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '👤'}</div>
+      <div class="user-info">
+        <div class="user-name">${u.tg_first_name || 'Noname'} ${u.tg_username ? '@'+u.tg_username : ''}</div>
+        <div class="user-sub">ID: ${u.tg_id} ${u.is_blocked ? '<span class="badge badge-red">Blocked</span>' : ''} ${u.is_admin ? '<span class="badge badge-accent">Admin</span>' : ''}</div>
+      </div>
+      <div class="user-bal">${fmt(parseFloat(u.balance))}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px;">
+        <button class="btn btn-sm btn-accent" onclick="showBalanceModal('${u.id}','${(u.tg_first_name||'').replace(/'/g,"\\'")}',${u.balance})">$</button>
+        <button class="btn btn-sm ${u.is_blocked?'btn-green':'btn-red'}" onclick="toggleBlock('${u.id}',${u.is_blocked})">${u.is_blocked?'Разбан':'Бан'}</button>
+      </div>
+    </div>
+  `).join('');
+
+  const total = data.total || 0;
+  const pages = Math.ceil(total / 20);
+  const pager = document.getElementById('usersPager');
+  if (pages > 1) {
+    pager.innerHTML = `
+      <button class="btn btn-sm btn-ghost" ${page<=0?'disabled':''} onclick="loadUsers(${page-1})">Назад</button>
+      <span style="color:var(--text2);font-size:13px;">${page+1} / ${pages} (${total})</span>
+      <button class="btn btn-sm btn-ghost" ${page>=pages-1?'disabled':''} onclick="loadUsers(${page+1})">Далее</button>
+    `;
+  } else {
+    pager.innerHTML = total > 0 ? `<span style="color:var(--text3);font-size:12px;">${total} игроков</span>` : '';
+  }
+}
+
+async function toggleBlock(uid, isBlocked) {
+  await api('payments-admin', '/admin/users', { action: isBlocked ? 'unblock' : 'block', user_id: uid });
+  loadUsers(usersPage);
+}
+
+function showBalanceModal(uid, name, bal) {
+  document.getElementById('bal_uid').value = uid;
+  document.getElementById('bal_user_info').textContent = `${name} — Баланс: ${fmt(bal)} USDT`;
+  document.getElementById('bal_amount').value = '';
+  document.getElementById('bal_reason').value = '';
+  document.getElementById('modalBalance').classList.add('active');
+}
+
+async function adjustBalance() {
+  const uid = document.getElementById('bal_uid').value;
+  const amount = parseFloat(document.getElementById('bal_amount').value);
+  const reason = document.getElementById('bal_reason').value || 'Admin adjustment';
+  if (!amount) { showToast('Введите сумму'); return; }
+  const data = await api('payments-admin', '/admin/users', { action: 'adjust_balance', user_id: uid, amount, reason });
+  if (data && data.success) {
+    showToast('Баланс обновлён: ' + fmt(data.new_balance));
+    closeModal('modalBalance');
+    loadUsers(usersPage);
+  }
+}
+
+// ═══ PROMOS ═══
+async function loadPromos() {
+  const data = await api('payments-admin', '/admin/promos', {});
+  if (!data) return;
+
+  document.getElementById('promosList').innerHTML = (data.promos || []).map(p => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:16px;font-family:monospace;color:var(--accent);">${p.code}</div>
+        <span class="badge ${p.is_active?'badge-green':'badge-red'}">${p.is_active?'Активен':'Неактивен'}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">
+        Тип: ${p.type === 'balance' ? 'Баланс' : 'Фри-спины'} ·
+        Значение: ${p.value} ·
+        ${p.game ? 'Игра: '+p.game+' · ' : ''}
+        Исп: ${p.used_count}/${p.max_uses}
+        ${p.expires_at ? ' · До: '+new Date(p.expires_at).toLocaleDateString('ru-RU') : ''}
+      </div>
+      <button class="btn btn-sm ${p.is_active?'btn-red':'btn-green'}" onclick="togglePromo('${p.id}',${p.is_active})">
+        ${p.is_active ? 'Деактивировать' : 'Активировать'}
+      </button>
+    </div>
+  `).join('') || '<div style="color:var(--text3);text-align:center;padding:20px;">Нет промокодов</div>';
+}
+
+function showCreatePromo() {
+  document.getElementById('pm_code').value = '';
+  document.getElementById('pm_value').value = '';
+  document.getElementById('modalPromo').classList.add('active');
+}
+
+async function createPromo() {
+  const code = document.getElementById('pm_code').value.trim();
+  const type = document.getElementById('pm_type').value;
+  const value = parseFloat(document.getElementById('pm_value').value);
+  const game = document.getElementById('pm_game').value || null;
+  const max_uses = parseInt(document.getElementById('pm_max').value) || 100;
+  const expires_days = parseInt(document.getElementById('pm_days').value) || null;
+
+  if (!code || !value) { showToast('Заполните код и значение'); return; }
+
+  const data = await api('payments-admin', '/admin/promos', { action: 'create', code, type, value, game, max_uses, expires_days });
+  if (data && data.success) {
+    showToast('Промокод создан!');
+    closeModal('modalPromo');
+    loadPromos();
+  }
+}
+
+async function togglePromo(id, isActive) {
+  await api('payments-admin', '/admin/promos', { action: isActive ? 'deactivate' : 'activate', promo_id: id });
+  loadPromos();
+}
+
+// ═══ FREE SPINS ═══
+document.getElementById('fs_target').addEventListener('change', function() {
+  document.getElementById('fs_uid_wrap').style.display = this.value === 'user' ? 'block' : 'none';
+});
+
+async function loadSpins() {
+  const data = await api('payments-admin', '/admin/free-spins', {});
+  if (!data) return;
+
+  document.getElementById('spinsList').innerHTML = (data.free_spins || []).map(s => `
+    <div class="card" style="padding:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;">${s.users?.tg_first_name || 'Noname'} ${s.users?.tg_username ? '@'+s.users.tg_username : ''}</div>
+          <div style="font-size:12px;color:var(--text2);">${s.game} · Ставка: ${s.bet_value} · Выиграно: ${fmt(parseFloat(s.total_won))}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;color:var(--green);">${s.spins_remaining}/${s.spins_total}</div>
+          <div style="font-size:11px;color:var(--text3);">спинов</div>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--text3);text-align:center;padding:20px;">Нет активных фри-спинов</div>';
+}
+
+function showGrantSpins() {
+  document.getElementById('fs_uid').value = '';
+  document.getElementById('modalSpins').classList.add('active');
+}
+
+async function grantSpins() {
+  const target = document.getElementById('fs_target').value;
+  const game = document.getElementById('fs_game').value;
+  const spins = parseInt(document.getElementById('fs_count').value);
+  const bet_value = parseFloat(document.getElementById('fs_bet').value);
+  const expires_days = parseInt(document.getElementById('fs_days').value) || 7;
+
+  if (!spins) { showToast('Укажите количество спинов'); return; }
+
+  if (target === 'all') {
+    const data = await api('payments-admin', '/admin/free-spins', { action: 'grant_all', game, spins, bet_value, expires_days });
+    if (data && data.success) {
+      showToast(`Выдано ${data.users_count} игрокам!`);
+      closeModal('modalSpins');
+      loadSpins();
+    }
+  } else {
+    const user_id = document.getElementById('fs_uid').value.trim();
+    if (!user_id) { showToast('Введите User ID'); return; }
+    const data = await api('payments-admin', '/admin/free-spins', { action: 'grant', user_id, game, spins, bet_value, expires_days });
+    if (data && data.success) {
+      showToast('Фри-спины выданы!');
+      closeModal('modalSpins');
+      loadSpins();
+    }
+  }
+}
+
+// ═══ TRANSACTIONS ═══
+let txsPage = 0;
+
+async function loadTxs(page) {
+  txsPage = page;
+  const type = document.getElementById('txTypeFilter').value || null;
+  const data = await api('payments-admin', '/admin/transactions', { page, type });
+  if (!data) return;
+
+  const typeLabels = { deposit:'Депозит', withdraw:'Вывод', bet:'Ставка', win:'Выигрыш', promo:'Промо', free_spin_win:'FS-выигрыш', refund:'Возврат' };
+  const typeCls = { deposit:'badge-green', withdraw:'badge-red', bet:'badge-blue', win:'badge-green', promo:'badge-accent', free_spin_win:'badge-accent', refund:'badge-blue' };
+
+  document.getElementById('txsList').innerHTML = (data.transactions || []).map(tx => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          ${tx.users?.tg_first_name || 'Noname'} ${tx.users?.tg_username ? '@'+tx.users.tg_username : ''}
+        </div>
+        <div style="font-size:11px;color:var(--text3);">${new Date(tx.created_at).toLocaleString('ru-RU')}</div>
+      </div>
+      <span class="badge ${typeCls[tx.type]||'badge-blue'}">${typeLabels[tx.type]||tx.type}</span>
+      <div style="font-weight:700;font-size:14px;min-width:70px;text-align:right;color:${tx.type==='win'||tx.type==='deposit'||tx.type==='promo'?'var(--green)':'var(--text)'}">
+        ${tx.type==='bet'||tx.type==='withdraw'?'-':'+'} ${fmt(parseFloat(tx.amount))}
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--text3);text-align:center;padding:20px;">Нет транзакций</div>';
+
+  const total = data.total || 0;
+  const pages = Math.ceil(total / 50);
+  const pager = document.getElementById('txsPager');
+  if (pages > 1) {
+    pager.innerHTML = `
+      <button class="btn btn-sm btn-ghost" ${page<=0?'disabled':''} onclick="loadTxs(${page-1})">Назад</button>
+      <span style="color:var(--text2);font-size:13px;">${page+1} / ${pages} (${total})</span>
+      <button class="btn btn-sm btn-ghost" ${page>=pages-1?'disabled':''} onclick="loadTxs(${page+1})">Далее</button>
+    `;
+  } else {
+    pager.innerHTML = total > 0 ? `<span style="color:var(--text3);font-size:12px;">${total} записей</span>` : '';
+  }
+}
+
+// ═══ UTILS ═══
+function fmt(n) {
+  n = parseFloat(n) || 0;
+  return n >= 1000 ? n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : n % 1 === 0 ? n.toString() : n.toFixed(2);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// Close modals on background click
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+
+// ═══ BOOT ═══
+boot();
+</script>
+</body>
+</html>
