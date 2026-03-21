@@ -751,9 +751,132 @@ serve(async (req: Request) => {
       case path === "/promo/redeem": return await handlePromo(req);
       case path === "/free-spins": return await handleFreeSpins(req);
       case path === "/leaderboard": return await handleLeaderboard(req);
+      case path === "/bot/webhook": return await handleBotWebhook(req);
+      case path === "/bot/set-webhook": return await setBotWebhook();
       default: return err("Not found", 404);
     }
   } catch (e: any) {
     return err("Server error: " + e.message, 500);
   }
 });
+
+// ═══ TELEGRAM BOT WEBHOOK ═══
+const WEBAPP_URL = "https://bestcop0-pixel.github.io/casino/";
+
+async function tgApi(method: string, body: Record<string, unknown> = {}) {
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+async function setBotWebhook() {
+  const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/game-api/bot/webhook`;
+  const result = await tgApi("setWebhook", {
+    url: webhookUrl,
+    allowed_updates: ["message"],
+  });
+  // Установить команды и кнопку меню
+  await tgApi("setMyCommands", {
+    commands: [
+      { command: "start", description: "Запустить казино" },
+      { command: "balance", description: "Проверить баланс" },
+      { command: "help", description: "Помощь" },
+    ],
+  });
+  await tgApi("setChatMenuButton", {
+    menu_button: {
+      type: "web_app",
+      text: "🎰 Играть",
+      web_app: { url: WEBAPP_URL },
+    },
+  });
+  return json({ ok: true, webhook: webhookUrl, result });
+}
+
+async function handleBotWebhook(req: Request) {
+  const update = await req.json();
+  const msg = update.message;
+  if (!msg) return json({ ok: true });
+
+  const chatId = msg.chat.id;
+  const tgId = msg.from.id;
+
+  // Обработка контакта (номер телефона)
+  if (msg.contact) {
+    const phone = msg.contact.phone_number;
+    // Сохранить в БД
+    await supabase.from("users").update({ phone }).eq("tg_id", tgId);
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `✅ Номер ${phone} сохранён!\n\nНажмите кнопку ниже, чтобы начать играть 🎰`,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "🎰 Открыть Sphere", web_app: { url: WEBAPP_URL } }
+        ]],
+        remove_keyboard: true,
+      },
+    });
+    return json({ ok: true });
+  }
+
+  // Команда /start
+  const text = msg.text || "";
+  if (text === "/start" || text.startsWith("/start")) {
+    // Проверяем есть ли уже номер
+    const { data: user } = await supabase.from("users").select("phone").eq("tg_id", tgId).single();
+
+    if (user?.phone) {
+      // Номер уже есть — сразу играть
+      await tgApi("sendMessage", {
+        chat_id: chatId,
+        text: `🎰 *Sphere Casino*\n\nДобро пожаловать, ${msg.from.first_name}!\nНажмите кнопку ниже, чтобы играть.`,
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "🎰 Играть", web_app: { url: WEBAPP_URL } }
+          ]],
+        },
+      });
+    } else {
+      // Запросить номер
+      await tgApi("sendMessage", {
+        chat_id: chatId,
+        text: `🎰 *Sphere Casino*\n\nДобро пожаловать, ${msg.from.first_name}!\n\nДля начала, поделитесь номером телефона для верификации 👇`,
+        parse_mode: "Markdown",
+        reply_markup: {
+          keyboard: [[
+            { text: "📱 Поделиться номером", request_contact: true }
+          ]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+        },
+      });
+    }
+    return json({ ok: true });
+  }
+
+  if (text === "/balance") {
+    const { data: user } = await supabase.from("users").select("balance").eq("tg_id", tgId).single();
+    const bal = user ? parseFloat(user.balance).toFixed(2) : "0.00";
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `💰 Ваш баланс: *${bal} USDT*`,
+      parse_mode: "Markdown",
+    });
+    return json({ ok: true });
+  }
+
+  if (text === "/help") {
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `🎰 *Sphere Casino — Помощь*\n\n/start — Запустить казино\n/balance — Проверить баланс\n\nНажмите кнопку «🎰 Играть» внизу чата для запуска.`,
+      parse_mode: "Markdown",
+    });
+    return json({ ok: true });
+  }
+
+  return json({ ok: true });
+}
