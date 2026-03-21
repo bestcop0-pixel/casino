@@ -1402,56 +1402,15 @@ html, body {
       </div>
     </div>
 
-    <!-- ═══ SLOTS ═══ -->
+    <!-- ═══ SLOTS (каталог) ═══ -->
     <div class="screen" id="screen-slots">
       <div class="game-screen-header">
         <div class="back-btn" onclick="navigate('lobby')">
           <svg viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div class="game-screen-title">🎰 Slot Machine</div>
+        <div class="game-screen-title">🎰 Слоты</div>
       </div>
-      <div class="slots-wrap">
-        <div class="reels-machine">
-          <div class="win-line"></div>
-          <div class="reels" id="reelsEl">
-            <div class="reel" id="reel0"><div class="reel-strip" id="strip0"></div></div>
-            <div class="reel" id="reel1"><div class="reel-strip" id="strip1"></div></div>
-            <div class="reel" id="reel2"><div class="reel-strip" id="strip2"></div></div>
-          </div>
-        </div>
-
-        <div class="slots-info-row">
-          <div class="slot-info-card">
-            <div class="slot-info-label">Последний выигрыш</div>
-            <div class="slot-info-val" id="lastWin">0</div>
-          </div>
-          <div class="slot-info-card">
-            <div class="slot-info-label">Ставка</div>
-            <div class="slot-info-val" id="curBetDisp">0.5</div>
-          </div>
-        </div>
-
-        <div class="bet-row">
-          <button class="bet-chip selected" onclick="selectBet(0.5,this)">0.5</button>
-          <button class="bet-chip" onclick="selectBet(1,this)">1</button>
-          <button class="bet-chip" onclick="selectBet(2,this)">2</button>
-          <button class="bet-chip" onclick="selectBet(5,this)">5</button>
-          <button class="bet-chip" onclick="selectBet(10,this)">10</button>
-          <button class="bet-chip" onclick="selectBet(25,this)">25</button>
-        </div>
-
-        <button class="action-btn btn-accent" id="spinBtn" onclick="spin()">КРУТИТЬ</button>
-
-        <div class="paytable">
-          <div class="paytable-title">ВЫПЛАТЫ</div>
-          <div class="paytable-row"><span class="paytable-symbols">💎💎💎</span><span class="paytable-mult">×50</span></div>
-          <div class="paytable-row"><span class="paytable-symbols">7️⃣7️⃣7️⃣</span><span class="paytable-mult">×25</span></div>
-          <div class="paytable-row"><span class="paytable-symbols">🍇🍇🍇</span><span class="paytable-mult">×10</span></div>
-          <div class="paytable-row"><span class="paytable-symbols">🍒🍒🍒</span><span class="paytable-mult">×5</span></div>
-          <div class="paytable-row"><span class="paytable-symbols">🍋🍋🍋</span><span class="paytable-mult">×3</span></div>
-          <div class="paytable-row"><span class="paytable-symbols">Пара</span><span class="paytable-mult">×1.5</span></div>
-        </div>
-      </div>
+      <div style="padding:12px;" id="slotsGrid"></div>
     </div>
 
     <!-- ═══ CRASH ═══ -->
@@ -1881,6 +1840,7 @@ function navigate(sc){
   document.getElementById('screen-'+sc).classList.add('active');
   curScreen=sc;
   if(sc==='wallet') updateWallet();
+  if(sc==='slots') renderSlotsGrid();
   if(sc==='leaderboard') renderLB('profit');
   if(sc==='roulette'){ _initRLC(); startRLLoop(); startIdleSpin(); }
   else { stopIdleSpin(); stopRLLoop(); }
@@ -1960,6 +1920,19 @@ function renderGames(filter='all'){
     </div>`;
   }).join('');
 }
+function renderSlotsGrid(){
+  const grid = document.getElementById('slotsGrid');
+  if(!grid) return;
+  const slotGames = GAMES.filter(g => g.cat === 'slots');
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${slotGames.map(g => {
+    const click = g.game ? `launchGame('${g.game}')` : `navigate('${g.nav}')`;
+    const icon = g.img ? `<img src="${g.img}" style="width:80%;max-height:80%;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));">` : `<span style="font-size:48px;">${g.emoji}</span>`;
+    return `<div class="game-card ${g.bg}" onclick="${click}" style="--glow:${g.glow}">
+      ${g.badge?`<div class="game-badge ${g.badge}">${g.badge.toUpperCase()}</div>`:''}
+      <div class="game-thumb"><div class="g-glow"></div>${icon}<span class="g-name">${g.name}</span></div>
+    </div>`;
+  }).join('')}</div>`;
+}
 function filterCat(cat,btn){
   document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
@@ -1969,109 +1942,7 @@ function filterCat(cat,btn){
 // ═══════════════════
 // SLOTS
 // ═══════════════════
-const SYMS=['🍒','🍋','🍇','💎','7️⃣'];
-const WGHT=[35,30,20,10,5];
-const PAYS={'💎':50,'7️⃣':25,'🍇':10,'🍒':5,'🍋':3};
-let slotBet=0.5, slotSpin=false;
-const SLEN=20;
-
-function buildStrip(id){
-  const s=document.getElementById(id);
-  s.innerHTML='';
-  const pool=[];
-  SYMS.forEach((sym,i)=>{for(let w=0;w<WGHT[i];w++)pool.push(sym);});
-  for(let i=0;i<SLEN;i++){
-    const d=document.createElement('div');
-    d.className='reel-symbol';
-    d.textContent=pool[Math.floor(Math.random()*pool.length)];
-    s.appendChild(d);
-  }
-}
-
-function initSlots(){ for(let i=0;i<3;i++) buildStrip('strip'+i); }
-
-function wRand(){
-  const pool=[];
-  SYMS.forEach((s,i)=>{for(let w=0;w<WGHT[i];w++)pool.push(s);});
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-
-function selectBet(a,btn){
-  slotBet=a;
-  document.getElementById('curBetDisp').textContent=a;
-  document.querySelectorAll('#screen-slots .bet-chip').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-
-function spin(){
-  if(slotSpin) return;
-  if(S.balance<slotBet){showToast('Недостаточно средств!');return;}
-  slotSpin=true;
-  S.totalGames++;
-  updateBal(-slotBet,null);
-  const btn=document.getElementById('spinBtn');
-  btn.disabled=true;btn.textContent='КРУТИМ...';
-  for(let i=0;i<3;i++) document.getElementById('reel'+i).classList.remove('winning');
-
-  const results=[wRand(),wRand(),wRand()];
-  const durs=[1200,1500,1800];
-  durs.forEach((dur,idx)=>{
-    spinReel('strip'+idx,dur,results[idx],()=>{
-      if(idx===2) onSpinDone(results);
-    });
-  });
-}
-
-function spinReel(stripId,duration,finalSym,cb){
-  const strip=document.getElementById(stripId);
-  const symH=100;
-  let startTime=null;
-  const totalScroll=symH*15+Math.random()*symH;
-  function anim(ts){
-    if(!startTime)startTime=ts;
-    const p=(ts-startTime)/duration;
-    if(p>=1){
-      const c=Array.from(strip.children);
-      const ti=Math.floor(Math.random()*(c.length-3));
-      c[ti].textContent=finalSym;
-      strip.style.transition='transform 0.2s ease-out';
-      strip.style.transform=`translateY(-${ti*symH}px)`;
-      setTimeout(()=>{strip.style.transition='';},220);
-      if(cb) setTimeout(cb,250);
-      return;
-    }
-    const ease=1-Math.pow(1-p,3);
-    const off=(ease*totalScroll)%(SLEN*symH);
-    strip.style.transform=`translateY(-${off}px)`;
-    requestAnimationFrame(anim);
-  }
-  strip.style.transition='';
-  requestAnimationFrame(anim);
-}
-
-function onSpinDone(results){
-  slotSpin=false;
-  const btn=document.getElementById('spinBtn');
-  btn.disabled=false;btn.textContent='КРУТИТЬ';
-  let mult=0;
-  if(results[0]===results[1]&&results[1]===results[2]){
-    mult=PAYS[results[0]]||3;
-    for(let i=0;i<3;i++) document.getElementById('reel'+i).classList.add('winning');
-  }else if(results[0]===results[1]||results[1]===results[2]||results[0]===results[2]){
-    mult=1.5;
-  }
-  if(mult>0){
-    const win=parseFloat((slotBet*mult).toFixed(2));
-    updateBal(win,`Слоты ×${mult}`,'win');
-    recordWin(win);
-    document.getElementById('lastWin').textContent=fmt(win);
-    showToast(`Выигрыш ${fmt(win)}! ×${mult}`);
-    if(mult>=10) spawnConfetti(50); else spawnConfetti(20);
-  }else{
-    document.getElementById('lastWin').textContent='0';
-    updateBal(0,'Слоты','lose');
-  }
-}
+// Слоты — каталог игр (вкладка Слоты)
 
 // ═══════════════════
 // CRASH
@@ -2845,13 +2716,8 @@ window.addEventListener('message',e=>{
 });
 
 // ═══════ INIT ═══════
-initSlots();
 renderGames();
 renderLB('profit');
-for(let i=0;i<3;i++){
-  const s=document.getElementById('strip'+i);
-  if(s) s.style.transform='translateY(-100px)';
-}
 // Boot auth
 bootAuth();
 </script>
