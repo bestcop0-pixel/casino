@@ -276,18 +276,18 @@ let grid=[];
 const SYM_FACES=['<img src="../Putin.png">','👤','<img src="../Macron.png">','<img src="../🤴.png">','<img src="../Merkel.png">','<img src="../😎.png">','<img src="../Trump.png">','W','💀'];
 const SYM_CSS=['sym-putin','sym-xi','sym-macron','sym-king','sym-merkel','sym-kim','sym-trump','sym-wild','sym-scatter'];
 const SYM_LABELS=['PUTIN','','MACRON','KING','MERKEL','KIM','TRUMP','WILD','FREE SPIN'];
-const PAY_MULT=[0.3,0.5,0.8,1.0,1.5,2.0,5.0,0,0];
+const PAY_MULT=[0.15,0.3,0.5,0.7,1.0,1.5,3.0,0,0];
 
 function clusterPay(si,count,b){
   if(si>=7)return 0;
   let m=PAY_MULT[si],r;
-  if(count<6)r=0.25;else if(count<8)r=0.5;else if(count<10)r=0.75;else r=1.0;
-  return b*m*r*(count/4);
+  if(count<6)r=0.15;else if(count<8)r=0.35;else if(count<10)r=0.6;else r=0.85;
+  return b*m*r*(count/5);
 }
 
 /* Weights: more low syms, rare trump/wild/scatter */
-const WEIGHTS=     [24,20,16,14,10,8,3,3,2];
-const WEIGHTS_ANTE=[22,18,14,12,9,7,3,3,12];
+const WEIGHTS=     [28,24,20,16,10,6,2,2,1];
+const WEIGHTS_ANTE=[26,22,18,14,9,5,2,2,8];
 
 function rndSym(){
   let w=anteOn?WEIGHTS_ANTE:WEIGHTS,t=0;
@@ -427,7 +427,7 @@ window.doSpin=async function doSpin(){
     if(fsActive)fsTotalWin+=currentWin;
     bal+=currentWin;bal=Math.round(bal*100)/100;updBal();
     document.getElementById('winDisplay').textContent=(fsActive?fsTotalWin:currentWin).toFixed(2);
-    if(currentWin>=actualBet*10){showWinOverlay(fsActive?fsTotalWin:currentWin);beep(880,.3,.06)}
+    if(currentWin>=actualBet*20){showWinOverlay(fsActive?fsTotalWin:currentWin);beep(880,.3,.06)}
     else beep(660,.15,.04);
   }
 
@@ -478,7 +478,7 @@ function flashBal(){let b=document.querySelector('.bal');b.style.borderColor='rg
 function showWinOverlay(amount){
   let ov=document.getElementById('winOverlay');
   document.getElementById('winOvVal').textContent=amount.toFixed(2);
-  let label=amount>=bet*50?'MEGA WIN!':amount>=bet*20?'EPIC WIN!':'BIG WIN!';
+  let label=amount>=bet*100?'MEGA WIN!':amount>=bet*40?'EPIC WIN!':'BIG WIN!';
   ov.querySelector('.ov-title').textContent=label;ov.classList.add('show');spawnConfetti();
 }
 window.closeWinOverlay=function(){document.getElementById('winOverlay').classList.remove('show')};
@@ -524,9 +524,9 @@ function renderHS(){
 function fmtMult(v){if(v>=10000)return(v/1000).toFixed(0)+'K';if(v>=1000)return(v/1000).toFixed(1)+'K';return(v%1===0?v:v.toFixed(1))+'x'}
 function fmtVal(v){return v>=1000?(v/1000).toFixed(0)+'K':''+v}
 
-const HS_LAND=0.18;
-const HS_ADD_V=[1,2,5,10,15,30,50,75,100],HS_ADD_W=[35,28,15,8,5,4,2,1.5,1.5];
-const HS_MUL_V=[2,3,5,10,20,50,100],HS_MUL_W=[35,25,17,10,6,4,3];
+const HS_LAND=0.10;
+const HS_ADD_V=[1,2,3,5,10,15,25,40,60],HS_ADD_W=[40,30,15,7,3,2,1.5,1,0.5];
+const HS_MUL_V=[2,3,5,8,15,25,50],HS_MUL_W=[42,28,15,8,4,2,1];
 function wPick(v,w){let t=0;for(let i=0;i<w.length;i++)t+=w[i];let r=Math.random()*t,s=0;for(let i=0;i<v.length;i++){s+=w[i];if(r<s)return v[i]}return v[0]}
 
 window.hsDoSpin=async function(){
@@ -537,7 +537,7 @@ window.hsDoSpin=async function(){
     if(hsGridData[r][c])continue;
     if(Math.random()<HS_LAND){
       landed=true;
-      let isG=Math.random()<0.03,isM=Math.random()<0.28;
+      let isG=Math.random()<0.015,isM=Math.random()<0.18;
       let type=isM?'mult':'adder';
       let value=type==='adder'?wPick(HS_ADD_V,HS_ADD_W):wPick(HS_MUL_V,HS_MUL_W);
       hsGridData[r][c]={type,value,global:isG};
