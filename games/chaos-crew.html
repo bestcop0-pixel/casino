@@ -6,1082 +6,638 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a1520">
+<meta name="theme-color" content="#0a0e18">
 <title>Geopolitical Chaos</title>
 <script>
-if(window.Telegram&&window.Telegram.WebApp){
-  const tg=window.Telegram.WebApp;
-  tg.expand();
-  tg.setHeaderColor('#0a1520');
-  tg.setBackgroundColor('#0a1520');
-}
+if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.expand();tg.setHeaderColor('#0a0e18');tg.setBackgroundColor('#0a0e18');}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#0a1520;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;height:100dvh;overflow:hidden;background:#0a0e18;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 body{display:flex;justify-content:center;font-family:'Inter',sans-serif;color:#fff}
 #GC{position:relative;width:100%;max-width:480px;height:100%;height:100dvh;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column}
 canvas#fx{position:absolute;top:0;left:0;width:100%;height:100%;z-index:60;pointer-events:none}
-
 .ui{position:relative;z-index:10;display:flex;flex-direction:column;height:100%}
 
-/* Top bar */
+/* Top */
 .top{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;flex-shrink:0}
-.bbk{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;font-size:16px;color:#fff;backdrop-filter:blur(10px)}
-.bbk:active{transform:scale(.9);border-color:rgba(255,80,80,.5)}
-.ttl{font-family:'Bungee Shade',cursive;font-size:clamp(11px,3.5vw,16px);background:linear-gradient(180deg,#ff4444 0%,#ff8800 40%,#ffcc00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 6px rgba(255,0,0,.4));letter-spacing:1px;text-align:center;line-height:1.1}
-.bal{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;font-size:clamp(10px,3vw,12px);font-weight:700;backdrop-filter:blur(10px);white-space:nowrap}
+.bbk{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff}
+.bbk:active{transform:scale(.9)}
+.ttl{font-family:'Bungee Shade',cursive;font-size:clamp(10px,3.2vw,15px);background:linear-gradient(180deg,#ff3333 0%,#ff8800 40%,#ffd700 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 8px rgba(255,0,0,.5));text-align:center;line-height:1.1}
+.bal{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 10px;font-size:clamp(10px,3vw,12px);font-weight:700;white-space:nowrap}
 .bal span{color:#7df56a}
 
 /* Ante */
 .ante-row{display:flex;justify-content:flex-end;padding:0 10px 2px;flex-shrink:0}
-.ante-toggle{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer}
-.ante-toggle .dot{width:32px;height:18px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);position:relative;transition:.3s}
-.ante-toggle .dot::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#666;transition:.3s}
-.ante-toggle.ac .dot{background:rgba(255,60,60,.3);border-color:rgba(255,60,60,.5)}
+.ante-toggle{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:rgba(255,255,255,.4);cursor:pointer}
+.ante-toggle .dot{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);position:relative;transition:.3s}
+.ante-toggle .dot::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:#555;transition:.3s}
+.ante-toggle.ac .dot{background:rgba(255,50,50,.25);border-color:rgba(255,50,50,.5)}
 .ante-toggle.ac .dot::after{left:16px;background:#ff4444}
-.ante-toggle.ac{color:#ff6666}
 
-/* Grid area */
-.grid-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:4px 6px}
-.grid-outer{position:relative;border:2px solid rgba(255,80,80,.2);border-radius:14px;background:rgba(0,0,0,.3);padding:4px;box-shadow:inset 0 0 40px rgba(255,0,0,.05),0 0 30px rgba(0,0,0,.5)}
+/* FS bar */
+.fs-bar{display:none;text-align:center;padding:3px;font-size:11px;font-weight:900;color:#ff4444;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.12);border-radius:8px;margin:1px 10px}
+.fs-bar.show{display:block}
 
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;position:relative}
-.cell{width:clamp(48px,14vw,56px);height:clamp(48px,14vw,56px);border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:clamp(24px,7vw,30px);position:relative;transition:transform .15s,background .2s;overflow:hidden}
-.cell.win{background:rgba(255,200,0,.15);border-color:rgba(255,200,0,.4);animation:cellWin .4s ease}
-.cell.wild-cell{background:rgba(0,200,255,.1);border-color:rgba(0,200,255,.3);box-shadow:0 0 12px rgba(0,200,255,.2)}
-.cell .wild-label{position:absolute;bottom:1px;font-size:7px;font-weight:900;color:#0ff;letter-spacing:1px;text-shadow:0 0 6px #0ff}
-.cell.dropping{animation:dropIn .3s ease-out}
-.cell.removing{animation:removeCell .25s ease-in forwards}
-@keyframes cellWin{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
-@keyframes dropIn{0%{transform:translateY(-60px);opacity:0}100%{transform:translateY(0);opacity:1}}
+/* Grid */
+.grid-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:2px 4px}
+.grid-outer{position:relative;border:2px solid rgba(255,60,60,.15);border-radius:14px;background:rgba(0,0,0,.35);padding:3px;box-shadow:inset 0 0 30px rgba(255,0,0,.04),0 0 20px rgba(0,0,0,.5)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.cell{width:clamp(46px,13.5vw,54px);height:clamp(46px,13.5vw,54px);border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;position:relative;transition:transform .15s,background .2s;overflow:hidden}
+.cell.win{background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.35);animation:cellWin .35s ease}
+.cell.dropping{animation:dropIn .28s ease-out}
+.cell.removing{animation:removeCell .22s ease-in forwards}
+@keyframes cellWin{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes dropIn{0%{transform:translateY(-50px);opacity:0}100%{transform:translateY(0);opacity:1}}
 @keyframes removeCell{0%{transform:scale(1);opacity:1}100%{transform:scale(0);opacity:0}}
 
-/* Multiplier badge */
-.mult-badge{position:absolute;top:-8px;right:-8px;background:linear-gradient(135deg,#ff4444,#ff8800);color:#fff;font-size:10px;font-weight:900;padding:2px 6px;border-radius:10px;z-index:5;display:none;box-shadow:0 2px 8px rgba(255,0,0,.4)}
+/* Symbol styling */
+.sym{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:7px;font-weight:900;position:relative}
+.sym .face{font-size:clamp(22px,6.5vw,28px);line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.sym .lbl{font-size:6px;letter-spacing:.5px;opacity:.7;margin-top:1px;text-transform:uppercase}
+
+/* Symbol colors */
+.sym-putin{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:#90caf9}
+.sym-xi{background:linear-gradient(135deg,#b71c1c 0%,#c62828 100%);color:#ffcdd2}
+.sym-macron{background:linear-gradient(135deg,#0d47a1 0%,#1565c0 100%);color:#bbdefb}
+.sym-king{background:linear-gradient(135deg,#1b5e20 0%,#2e7d32 100%);color:#c8e6c9}
+.sym-merkel{background:linear-gradient(135deg,#4a148c 0%,#6a1b9a 100%);color:#e1bee7}
+.sym-kim{background:linear-gradient(135deg,#424242 0%,#616161 100%);color:#e0e0e0}
+.sym-trump{background:linear-gradient(135deg,#ff6f00 0%,#f57f17 100%);color:#fff;box-shadow:0 0 8px rgba(255,200,0,.3)}
+.sym-trump .face{filter:drop-shadow(0 0 6px rgba(255,200,0,.5))}
+.sym-wild{background:linear-gradient(135deg,#00bcd4 0%,#0097a7 50%,#00838f 100%);color:#fff;box-shadow:0 0 10px rgba(0,200,255,.3);border:1px solid rgba(0,255,255,.3)}
+.sym-wild .face{font-size:clamp(10px,3.5vw,13px);font-weight:900;letter-spacing:2px;text-shadow:0 0 10px rgba(0,255,255,.8)}
+.sym-scatter{background:linear-gradient(135deg,#880e4f 0%,#ad1457 50%,#c2185b 100%);color:#fff;box-shadow:0 0 10px rgba(255,0,100,.3);animation:scatterPulse 2s ease-in-out infinite}
+@keyframes scatterPulse{0%,100%{box-shadow:0 0 8px rgba(255,0,100,.2)}50%{box-shadow:0 0 16px rgba(255,0,100,.5)}}
+
+/* Mult badge */
+.mult-badge{position:absolute;top:-6px;right:-6px;background:linear-gradient(135deg,#ff3333,#ff8800);color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:8px;z-index:5;display:none;box-shadow:0 2px 6px rgba(255,0,0,.4)}
 .mult-badge.show{display:block;animation:badgePop .3s ease}
 @keyframes badgePop{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
 
-/* Screen shake */
+/* Shake */
 .shake{animation:shake .4s ease}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) rotate(-0.5deg)}40%{transform:translateX(4px) rotate(0.5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-1deg)}40%{transform:translateX(5px) rotate(1deg)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 
-/* Bottom panel */
+/* Bottom */
 .bp{flex-shrink:0;padding-bottom:max(env(safe-area-inset-bottom,0px),4px)}
-.bp-bg{background:linear-gradient(180deg,transparent 0%,rgba(10,21,32,.98) 20%);padding:8px 10px 4px}
-.cr{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.bs,.ws{flex:1;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px 4px}
-.sl{font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
-.bv{font-size:clamp(13px,3.8vw,17px);font-weight:900;color:#fff;margin-top:1px}
-.wv{font-size:clamp(13px,3.8vw,17px);font-weight:900;color:#7df56a;margin-top:1px;min-height:18px}
-.bc{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px}
-.bb{width:28px;height:28px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.15);color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;font-family:Inter}
-.bb:active{transform:scale(.85);background:rgba(255,80,80,.2);border-color:rgba(255,80,80,.4)}
+.bp-bg{background:linear-gradient(180deg,transparent 0%,rgba(10,14,24,.98) 20%);padding:6px 10px 3px}
+.cr{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.bs,.ws{flex:1;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:5px 3px}
+.sl{font-size:7px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.bv{font-size:clamp(12px,3.6vw,16px);font-weight:900;margin-top:1px}
+.wv{font-size:clamp(12px,3.6vw,16px);font-weight:900;color:#7df56a;margin-top:1px;min-height:16px}
+.bc{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:3px}
+.bb{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.bb:active{transform:scale(.85);background:rgba(255,50,50,.2)}
 
-/* Spin button */
-.sw{position:relative;display:flex;align-items:center;justify-content:center;margin:0 4px}
-.sb{width:clamp(52px,15vw,64px);height:clamp(52px,15vw,64px);border-radius:50%;background:linear-gradient(145deg,#ff5555 0%,#cc2222 50%,#991111 100%);border:3px solid rgba(255,255,255,.25);cursor:pointer;position:relative;box-shadow:0 0 25px rgba(255,50,50,.4),0 6px 20px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.3);transition:.15s;display:flex;align-items:center;justify-content:center}
-.sb::before{content:'';position:absolute;top:4px;left:15%;right:15%;height:35%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.35),transparent);pointer-events:none}
-.sb svg{width:24px;height:24px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
-.sb:active{transform:scale(.92);box-shadow:0 0 12px rgba(255,50,50,.3),0 3px 10px rgba(0,0,0,.4)}
+/* Spin */
+.sw{position:relative;display:flex;align-items:center;justify-content:center;margin:0 3px}
+.sb{width:clamp(50px,14vw,62px);height:clamp(50px,14vw,62px);border-radius:50%;background:linear-gradient(145deg,#ff4444 0%,#cc1111 50%,#990000 100%);border:3px solid rgba(255,255,255,.2);cursor:pointer;box-shadow:0 0 20px rgba(255,30,30,.4),0 4px 15px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.25);transition:.15s;display:flex;align-items:center;justify-content:center}
+.sb::before{content:'';position:absolute;top:4px;left:15%;right:15%;height:30%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.3),transparent);pointer-events:none}
+.sb svg{width:22px;height:22px;fill:#fff}
+.sb:active{transform:scale(.92)}
 .sb.sp{animation:spr .6s linear infinite}
-.sb.dis{opacity:.4;pointer-events:none}
+.sb.dis{opacity:.35;pointer-events:none}
 @keyframes spr{to{transform:rotate(360deg)}}
-.sg{position:absolute;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(255,50,50,.12),transparent 70%);animation:pg 2s ease-in-out infinite;pointer-events:none}
-@keyframes pg{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.4);opacity:.8}}
+.sg{position:absolute;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle,rgba(255,30,30,.1),transparent 70%);animation:pg 2s ease-in-out infinite;pointer-events:none}
+@keyframes pg{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.4);opacity:.7}}
 
-/* Extra buttons */
-.sr{display:flex;justify-content:center;gap:6px;margin-top:6px}
-.bt{padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:9px;font-weight:700;cursor:pointer;transition:.15s;font-family:Inter;letter-spacing:.5px}
-.bt.ac{background:rgba(255,60,60,.1);border-color:rgba(255,60,60,.3);color:#ff6666}
+/* Extra btns */
+.sr{display:flex;justify-content:center;gap:5px;margin-top:4px}
+.bt{padding:3px 12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.35);font-size:8px;font-weight:700;cursor:pointer;transition:.15s;letter-spacing:.5px}
+.bt.ac{background:rgba(255,50,50,.1);border-color:rgba(255,50,50,.3);color:#ff6666}
 .bt:active{transform:scale(.93)}
 
-/* Buy Bonus */
-.buy-wrap{display:flex;justify-content:center;gap:8px;margin-top:6px}
-.buy-btn{padding:5px 12px;border-radius:10px;background:linear-gradient(135deg,rgba(255,60,60,.12),rgba(255,200,0,.08));border:1px solid rgba(255,60,60,.3);color:#ff6666;font-size:10px;font-weight:800;cursor:pointer;transition:.2s;font-family:Inter;letter-spacing:.5px;text-transform:uppercase;position:relative;overflow:hidden}
+/* Buy */
+.buy-wrap{display:flex;justify-content:center;gap:6px;margin-top:4px}
+.buy-btn{padding:5px 10px;border-radius:10px;background:linear-gradient(135deg,rgba(255,50,50,.1),rgba(255,180,0,.06));border:1px solid rgba(255,50,50,.25);color:#ff5555;font-size:9px;font-weight:800;cursor:pointer;transition:.2s;letter-spacing:.5px;text-transform:uppercase}
 .buy-btn:active{transform:scale(.93)}
-.buy-btn.dis{opacity:.35;pointer-events:none}
-.buy-btn .cost{color:#ffcc00;margin-left:4px}
-
-/* FS info bar */
-.fs-bar{display:none;text-align:center;padding:4px;font-size:12px;font-weight:900;color:#ff4444;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.15);border-radius:8px;margin:2px 10px}
-.fs-bar.show{display:block}
+.buy-btn.dis{opacity:.3;pointer-events:none}
+.buy-btn .cost{color:#ffd700;margin-left:3px}
 
 /* Overlays */
-.overlay{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .4s}
+.overlay{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .4s}
 .overlay.show{opacity:1;pointer-events:auto}
-.ov-title{font-family:'Bungee Shade',cursive;font-size:clamp(20px,7vw,32px);background:linear-gradient(180deg,#ff4444,#ffcc00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;text-align:center}
-.ov-sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:6px}
-.ov-val{font-size:clamp(28px,10vw,42px);font-weight:900;color:#7df56a;text-shadow:0 0 20px rgba(125,245,106,.5);margin-bottom:20px}
-.ov-btn{padding:12px 40px;border-radius:30px;background:linear-gradient(145deg,#ff5555,#cc2222);border:2px solid rgba(255,255,255,.2);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 0 20px rgba(255,50,50,.3)}
+.ov-title{font-family:'Bungee Shade',cursive;font-size:clamp(18px,7vw,30px);background:linear-gradient(180deg,#ff3333,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;text-align:center}
+.ov-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:6px}
+.ov-val{font-size:clamp(26px,9vw,40px);font-weight:900;color:#7df56a;text-shadow:0 0 20px rgba(125,245,106,.5);margin-bottom:16px}
+.ov-btn{padding:12px 36px;border-radius:28px;background:linear-gradient(145deg,#ff4444,#cc1111);border:2px solid rgba(255,255,255,.15);color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 0 18px rgba(255,30,30,.3)}
 .ov-btn:active{transform:scale(.95)}
 
-/* Hold & Spin overlay */
-.hs-overlay{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;background:#0a1520}
+/* Hold & Spin */
+.hs-overlay{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;background:#0a0e18}
 .hs-overlay.show{display:flex}
 .hs-top{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;flex-shrink:0}
-.hs-title{font-family:'Bungee Shade',cursive;font-size:14px;color:#ff4444}
-.hs-lives{font-size:13px;font-weight:900;color:#ffcc00}
-.hs-mults{display:flex;justify-content:center;gap:6px;padding:4px 10px;flex-shrink:0}
-.hs-mult{flex:1;text-align:center;background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.2);border-radius:8px;padding:4px 2px;transition:all .3s}
-.hs-mult.flash{background:rgba(255,200,0,.25);border-color:rgba(255,200,0,.6);box-shadow:0 0 12px rgba(255,200,0,.3)}
-.hs-mult .label{font-size:7px;color:rgba(255,255,255,.4);text-transform:uppercase}
-.hs-mult .val{font-size:14px;font-weight:900;color:#ffcc00;text-shadow:0 0 8px rgba(255,200,0,.3)}
-.hs-grid-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:6px}
-.hs-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
-.hs-cell{width:clamp(48px,14vw,56px);height:clamp(48px,14vw,56px);border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;position:relative;transition:all .3s}
-.hs-cell.filled{background:rgba(255,200,0,.08);border-color:rgba(255,200,0,.2);animation:cellWin .4s ease}
-.hs-cell.global{background:rgba(255,200,0,.15);border-color:rgba(255,200,0,.4);box-shadow:0 0 12px rgba(255,200,0,.2)}
-.hs-cell .hs-val{font-size:9px;font-weight:900;color:#ffcc00;margin-top:1px}
-.hs-bottom{flex-shrink:0;padding:8px 12px;text-align:center;padding-bottom:max(env(safe-area-inset-bottom,0px),8px)}
-.hs-spin-btn{width:100%;padding:12px;border-radius:12px;background:linear-gradient(145deg,#ff5555,#cc2222);border:2px solid rgba(255,255,255,.2);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 0 20px rgba(255,50,50,.3);transition:.15s}
+.hs-title{font-family:'Bungee Shade',cursive;font-size:13px;color:#ff4444}
+.hs-lives{font-size:12px;font-weight:900;color:#ffd700}
+.hs-mults{display:flex;justify-content:center;gap:5px;padding:3px 10px;flex-shrink:0}
+.hs-mult{flex:1;text-align:center;background:rgba(255,200,0,.06);border:1px solid rgba(255,200,0,.15);border-radius:8px;padding:4px 2px;transition:all .3s}
+.hs-mult.flash{background:rgba(255,200,0,.2);border-color:rgba(255,200,0,.5);box-shadow:0 0 12px rgba(255,200,0,.3)}
+.hs-mult .mlabel{font-size:6px;color:rgba(255,255,255,.35);text-transform:uppercase}
+.hs-mult .mval{font-size:clamp(12px,3.5vw,16px);font-weight:900;color:#ffd700;text-shadow:0 0 6px rgba(255,200,0,.3)}
+.hs-grid-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:4px}
+.hs-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.hs-cell{width:clamp(46px,13.5vw,54px);height:clamp(46px,13.5vw,54px);border-radius:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:all .3s}
+.hs-cell.filled{background:rgba(255,200,0,.06);border-color:rgba(255,200,0,.15);animation:cellWin .35s ease}
+.hs-cell.global{background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.35);box-shadow:0 0 10px rgba(255,200,0,.2)}
+.hs-cell .hs-icon{font-size:18px}
+.hs-cell .hs-val{font-size:8px;font-weight:900;color:#ffd700;margin-top:1px}
+.hs-bottom{flex-shrink:0;padding:6px 12px;text-align:center;padding-bottom:max(env(safe-area-inset-bottom,0px),6px)}
+.hs-spin-btn{width:100%;padding:11px;border-radius:12px;background:linear-gradient(145deg,#ff4444,#cc1111);border:2px solid rgba(255,255,255,.15);color:#fff;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 0 16px rgba(255,30,30,.3);transition:.15s}
 .hs-spin-btn:active{transform:scale(.97)}
-.hs-spin-btn.dis{opacity:.4;pointer-events:none}
-.hs-total{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px}
-.hs-total b{color:#7df56a;font-size:14px}
+.hs-spin-btn.dis{opacity:.35;pointer-events:none}
+.hs-total{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px}
+.hs-total b{color:#7df56a;font-size:13px}
 
-/* Info overlay */
-.info-ov{position:absolute;inset:0;z-index:55;display:none;flex-direction:column;background:rgba(10,21,32,.97);backdrop-filter:blur(8px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:max(env(safe-area-inset-bottom,0px),16px)}
+/* HS bonus sym styling */
+.hs-sym{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:7px}
+.hs-sym.adder{background:linear-gradient(135deg,#1a237e,#283593)}
+.hs-sym.adder-g{background:linear-gradient(135deg,#f9a825,#f57f17);box-shadow:inset 0 0 12px rgba(255,255,0,.3)}
+.hs-sym.mult{background:linear-gradient(135deg,#ff6f00,#f57f17)}
+.hs-sym.mult-g{background:linear-gradient(135deg,#ff1744,#d50000);box-shadow:inset 0 0 12px rgba(255,0,0,.3)}
+
+/* Info */
+.info-ov{position:absolute;inset:0;z-index:55;display:none;flex-direction:column;background:rgba(10,14,24,.97);backdrop-filter:blur(8px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;padding-bottom:max(env(safe-area-inset-bottom,0px),14px)}
 .info-ov.show{display:flex}
-.info-close{align-self:flex-end;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.info-ov h2{font-family:'Bungee Shade',cursive;font-size:16px;color:#ff4444;margin:12px 0 8px}
-.info-ov p{font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:8px}
-.info-ov .sym-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;color:rgba(255,255,255,.7)}
-.info-ov .sym-row .sym-icon{font-size:22px}
+.info-close{align-self:flex-end;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.info-ov h2{font-family:'Bungee Shade',cursive;font-size:14px;color:#ff4444;margin:10px 0 6px}
+.info-ov p{font-size:11px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:6px}
+.info-ov .sym-row{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11px;color:rgba(255,255,255,.65)}
+.info-ov .sym-demo{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 
-/* Confirm overlay */
+/* Confirm */
 .confirm-ov{position:absolute;inset:0;z-index:52;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(8px)}
 .confirm-ov.show{display:flex}
-.confirm-box{background:rgba(20,35,50,.95);border:1px solid rgba(255,80,80,.3);border-radius:16px;padding:24px;text-align:center;max-width:300px}
-.confirm-box h3{font-size:16px;margin-bottom:8px;color:#ff6666}
-.confirm-box p{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px}
-.confirm-box .cost-display{font-size:22px;font-weight:900;color:#ffcc00;margin-bottom:16px}
-.confirm-btns{display:flex;gap:10px;justify-content:center}
-.confirm-btns button{padding:10px 24px;border-radius:20px;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:.15s}
+.confirm-box{background:rgba(15,20,35,.95);border:1px solid rgba(255,60,60,.25);border-radius:16px;padding:20px;text-align:center;max-width:280px}
+.confirm-box h3{font-size:15px;margin-bottom:6px;color:#ff5555}
+.confirm-box p{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px}
+.confirm-box .cost-display{font-size:20px;font-weight:900;color:#ffd700;margin-bottom:14px}
+.confirm-btns{display:flex;gap:8px;justify-content:center}
+.confirm-btns button{padding:9px 22px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;border:none;transition:.15s}
 .confirm-btns button:active{transform:scale(.93)}
-.confirm-btns .c-yes{background:linear-gradient(145deg,#ff5555,#cc2222);color:#fff}
-.confirm-btns .c-no{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
+.confirm-btns .c-yes{background:linear-gradient(145deg,#ff4444,#cc1111);color:#fff}
+.confirm-btns .c-no{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1)}
 </style>
 </head>
 <body>
 <div id="GC">
 <canvas id="fx"></canvas>
 <div class="ui">
-  <!-- Top bar -->
   <div class="top">
     <div class="bbk" onclick="goBack()">&#8592;</div>
     <div class="ttl">GEOPOLITICAL<br>CHAOS</div>
     <div class="bal">&#x1F4B0; <span>0.00</span></div>
   </div>
-
-  <!-- Ante toggle -->
-  <div class="ante-row">
-    <div class="ante-toggle" id="anteToggle" onclick="toggleAnte()">
-      <span>ANTE</span>
-      <div class="dot"></div>
-    </div>
-  </div>
-
-  <!-- Free spins bar -->
+  <div class="ante-row"><div class="ante-toggle" id="anteToggle" onclick="toggleAnte()"><span>ANTE</span><div class="dot"></div></div></div>
   <div class="fs-bar" id="fsBar"></div>
-
-  <!-- Grid -->
   <div class="grid-wrap">
     <div class="grid-outer" id="gridOuter">
       <div class="mult-badge" id="multBadge">x1</div>
       <div class="grid" id="grid"></div>
     </div>
   </div>
-
-  <!-- Bottom panel -->
-  <div class="bp">
-    <div class="bp-bg">
-      <div class="cr">
-        <div class="bs">
-          <div class="sl">TOTAL BET</div>
-          <div class="bv" id="betDisplay">1.00</div>
-        </div>
-        <div class="sw">
-          <div class="sg"></div>
-          <div class="sb" id="spinBtn" onclick="doSpin()">
-            <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          </div>
-        </div>
-        <div class="ws">
-          <div class="sl">WIN</div>
-          <div class="wv" id="winDisplay"></div>
-        </div>
+  <div class="bp"><div class="bp-bg">
+    <div class="cr">
+      <div class="bs"><div class="sl">TOTAL BET</div><div class="bv" id="betDisplay">1.00</div></div>
+      <div class="sw"><div class="sg"></div>
+        <div class="sb" id="spinBtn" onclick="doSpin()"><svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></div>
       </div>
-      <div class="bc">
-        <div class="bb" onclick="changeBet(-1)">&#8722;</div>
-        <span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:600;letter-spacing:1px">BET</span>
-        <div class="bb" onclick="changeBet(1)">+</div>
-      </div>
-      <div class="sr">
-        <div class="bt" id="btnTurbo" onclick="toggleTurbo()">TURBO</div>
-        <div class="bt" id="btnAuto" onclick="toggleAuto()">AUTO</div>
-        <div class="bt" id="btnSound" onclick="toggleSound()">SOUND</div>
-        <div class="bt" onclick="showInfo()">INFO</div>
-      </div>
-      <div class="buy-wrap">
-        <div class="buy-btn" id="buyBtn" onclick="buyBonus(100)">BUY BONUS <span class="cost">100x</span></div>
-        <div class="buy-btn" id="superBtn" onclick="buyBonus(250)">SUPER BONUS <span class="cost">250x</span></div>
-      </div>
+      <div class="ws"><div class="sl">WIN</div><div class="wv" id="winDisplay"></div></div>
     </div>
-  </div>
+    <div class="bc"><div class="bb" onclick="changeBet(-1)">&#8722;</div><span style="font-size:8px;color:rgba(255,255,255,.25);font-weight:600;letter-spacing:1px">BET</span><div class="bb" onclick="changeBet(1)">+</div></div>
+    <div class="sr">
+      <div class="bt" id="btnTurbo" onclick="toggleTurbo()">&#9889; TURBO</div>
+      <div class="bt" id="btnAuto" onclick="toggleAuto()">&#9881; AUTO</div>
+      <div class="bt" id="btnSound" onclick="toggleSound()">&#128266;</div>
+      <div class="bt" onclick="showInfo()">&#9432; INFO</div>
+    </div>
+    <div class="buy-wrap">
+      <div class="buy-btn" id="buyBtn" onclick="buyBonus(100)">&#127873; BUY BONUS <span class="cost">100x</span></div>
+      <div class="buy-btn" id="superBtn" onclick="buyBonus(250)">&#128142; SUPER BONUS <span class="cost">250x</span></div>
+    </div>
+  </div></div>
 </div>
 
-<!-- Win overlay -->
-<div class="overlay" id="winOverlay">
-  <div class="ov-title">BIG WIN!</div>
-  <div class="ov-val" id="winOvVal">0.00</div>
-  <div class="ov-btn" onclick="closeWinOverlay()">COLLECT</div>
-</div>
+<div class="overlay" id="winOverlay"><div class="ov-title">BIG WIN!</div><div class="ov-val" id="winOvVal">0.00</div><div class="ov-btn" onclick="closeWinOverlay()">COLLECT</div></div>
+<div class="overlay" id="fsIntro"><div class="ov-title">HOLD &amp; SPIN</div><div class="ov-sub">3 Respins — &#1051;&#1086;&#1074;&#1080; &#1089;&#1080;&#1084;&#1074;&#1086;&#1083;&#1099;!</div><div class="ov-btn" onclick="startHoldSpin()">START</div></div>
 
-<!-- FS intro overlay -->
-<div class="overlay" id="fsIntro">
-  <div class="ov-title">HOLD &amp; SPIN</div>
-  <div class="ov-sub">3 Respins - Land symbols to win!</div>
-  <div class="ov-btn" onclick="startHoldSpin(false)">START</div>
-</div>
-
-<!-- Hold & Spin -->
 <div class="hs-overlay" id="hsOverlay">
-  <div class="hs-top">
-    <div class="hs-title">HOLD &amp; SPIN</div>
-    <div class="hs-lives" id="hsLives">&#10084;&#65039; 3</div>
-  </div>
+  <div class="hs-top"><div class="hs-title">HOLD &amp; SPIN</div><div class="hs-lives" id="hsLives">&#10084;&#65039; 3</div></div>
   <div class="hs-mults" id="hsMults"></div>
-  <div class="hs-grid-wrap">
-    <div class="hs-grid" id="hsGrid"></div>
-  </div>
-  <div class="hs-bottom">
-    <div class="hs-spin-btn" id="hsSpinBtn" onclick="hsDoSpin()">SPIN</div>
-    <div class="hs-total">Total: <b id="hsTotal">0.00</b></div>
-  </div>
+  <div class="hs-grid-wrap"><div class="hs-grid" id="hsGrid"></div></div>
+  <div class="hs-bottom"><div class="hs-spin-btn" id="hsSpinBtn" onclick="hsDoSpin()">SPIN</div><div class="hs-total">Total: <b id="hsTotal">0.00</b></div></div>
 </div>
 
-<!-- Confirm buy overlay -->
-<div class="confirm-ov" id="confirmOv">
-  <div class="confirm-box">
-    <h3 id="confirmTitle">BUY BONUS?</h3>
-    <p id="confirmDesc">This will cost:</p>
-    <div class="cost-display" id="confirmCost">100.00</div>
-    <div class="confirm-btns">
-      <button class="c-no" onclick="cancelBuy()">CANCEL</button>
-      <button class="c-yes" id="confirmYes" onclick="confirmBuyYes()">BUY</button>
-    </div>
-  </div>
-</div>
+<div class="confirm-ov" id="confirmOv"><div class="confirm-box"><h3 id="confirmTitle">BUY BONUS?</h3><p id="confirmDesc">This will cost:</p><div class="cost-display" id="confirmCost">100.00</div><div class="confirm-btns"><button class="c-no" onclick="cancelBuy()">CANCEL</button><button class="c-yes" onclick="confirmBuyYes()">BUY</button></div></div></div>
 
-<!-- Info -->
 <div class="info-ov" id="infoOv">
   <div class="info-close" onclick="hideInfo()">&#10005;</div>
-  <h2>SYMBOLS</h2>
-  <div class="sym-row"><span class="sym-icon">&#x1F535;</span> Blue Chip &#8212; x0.5 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F7E2;</span> Green Chip &#8212; x0.5 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F7E1;</span> Yellow Chip &#8212; x0.5 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F1EA;&#x1F1FA;</span> EU &#8212; x1 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F1EC;&#x1F1E7;</span> UK &#8212; x1.5 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F1E8;&#x1F1F3;</span> China &#8212; x2 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F1F7;&#x1F1FA;</span> Russia &#8212; x3 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F1FA;&#x1F1F8;</span> USA &#8212; x5 (8+ cluster)</div>
-  <div class="sym-row"><span class="sym-icon">&#x26A1;</span> Wild &#8212; Substitutes all except Scatter</div>
-  <div class="sym-row"><span class="sym-icon">&#x1F480;</span> Scatter &#8212; 3+ triggers Hold &amp; Spin</div>
-  <h2>CLUSTER PAYS</h2>
-  <p>Groups of 4+ matching adjacent symbols (horizontal/vertical) form winning clusters. Wilds substitute for any symbol except scatter.</p>
-  <p><b>Payouts scale with cluster size:</b><br>4-5 symbols: 25% of multiplier<br>6-7 symbols: 50%<br>8-9 symbols: 75%<br>10+ symbols: 100%</p>
-  <h2>TUMBLE</h2>
-  <p>After a win, winning symbols are removed and new symbols fall in. A multiplier increases by x1 with each consecutive tumble.</p>
-  <h2>HOLD &amp; SPIN BONUS</h2>
-  <p>Land 3+ &#x1F480; scatters to trigger Hold &amp; Spin. Each reel has its own multiplier. Land symbols to increase multipliers. Final win = bet x sum of all reel multipliers.</p>
-  <p><b>Bonus symbols:</b><br>&#x1F1F7;&#x1F1FA; Adder: adds to that reel multiplier<br>&#x1F1F7;&#x1F1FA;&#x2728; Global Adder: adds to ALL reel multipliers<br>&#x1F1FA;&#x1F1F8; Multiplier: multiplies that reel multiplier<br>&#x1F1FA;&#x1F1F8;&#x2728; Global Multiplier: multiplies ALL reel multipliers</p>
+  <h2>&#1057;&#1048;&#1052;&#1042;&#1054;&#1051;&#1067;</h2>
+  <div class="sym-row"><div class="sym-demo sym-putin">&#128511;</div> &#1055;&#1091;&#1090;&#1080;&#1085; — x0.3 (&#1076;&#1077;&#1096;&#1105;&#1074;&#1099;&#1081;)</div>
+  <div class="sym-row"><div class="sym-demo sym-xi">&#128100;</div> &#1057;&#1080; — x0.5</div>
+  <div class="sym-row"><div class="sym-demo sym-macron">&#129333;</div> &#1052;&#1072;&#1082;&#1088;&#1086;&#1085; — x0.8</div>
+  <div class="sym-row"><div class="sym-demo sym-king">&#129332;</div> &#1050;&#1086;&#1088;&#1086;&#1083;&#1100; — x1</div>
+  <div class="sym-row"><div class="sym-demo sym-merkel">&#128103;</div> &#1052;&#1077;&#1088;&#1082;&#1077;&#1083;&#1100; — x1.5</div>
+  <div class="sym-row"><div class="sym-demo sym-kim">&#128526;</div> &#1050;&#1080;&#1084; — x2</div>
+  <div class="sym-row"><div class="sym-demo sym-trump">&#129312;</div> <b style="color:#ffd700">&#1058;&#1088;&#1072;&#1084;&#1087;</b> — x5 (&#1089;&#1072;&#1084;&#1099;&#1081; &#1076;&#1086;&#1088;&#1086;&#1075;&#1086;&#1081;)</div>
+  <div class="sym-row"><div class="sym-demo sym-wild">W</div> <b style="color:#0ff">WILD</b> — &#1047;&#1072;&#1084;&#1077;&#1085;&#1103;&#1077;&#1090; &#1074;&#1089;&#1105;</div>
+  <div class="sym-row"><div class="sym-demo sym-scatter">&#128128;</div> <b style="color:#ff4081">FREE SPIN</b> — 3+ = &#1073;&#1086;&#1085;&#1091;&#1089;</div>
+  <h2>&#1050;&#1051;&#1040;&#1057;&#1058;&#1045;&#1056;&#1067;</h2>
+  <p>4+ &#1086;&#1076;&#1080;&#1085;&#1072;&#1082;&#1086;&#1074;&#1099;&#1093; &#1089;&#1080;&#1084;&#1074;&#1086;&#1083;&#1086;&#1074; &#1088;&#1103;&#1076;&#1086;&#1084; = &#1074;&#1099;&#1080;&#1075;&#1088;&#1099;&#1096;. Wild &#1079;&#1072;&#1084;&#1077;&#1085;&#1103;&#1077;&#1090; &#1074;&#1089;&#1105; &#1082;&#1088;&#1086;&#1084;&#1077; Free Spin. &#1055;&#1086;&#1089;&#1083;&#1077; &#1074;&#1099;&#1080;&#1075;&#1088;&#1099;&#1096;&#1072; — &#1082;&#1072;&#1089;&#1082;&#1072;&#1076; (tumble), &#1084;&#1085;&#1086;&#1078;&#1080;&#1090;&#1077;&#1083;&#1100; +1.</p>
+  <h2>HOLD &amp; SPIN</h2>
+  <p>3+ &#128128; = &#1073;&#1086;&#1085;&#1091;&#1089;. 5 &#1073;&#1072;&#1088;&#1072;&#1073;&#1072;&#1085;&#1086;&#1074;, &#1082;&#1072;&#1078;&#1076;&#1099;&#1081; &#1089; 1x. 3 &#1088;&#1077;&#1089;&#1087;&#1080;&#1085;&#1072;.</p>
+  <p><b>&#1055;&#1091;&#1090;&#1080;&#1085;</b> — &#1087;&#1083;&#1102;&#1089;&#1091;&#1077;&#1090; &#1082; &#1073;&#1072;&#1088;&#1072;&#1073;&#1072;&#1085;&#1091;<br><b>&#1051;&#1077;&#1075;&#1077;&#1085;&#1076;&#1072;&#1088;&#1085;&#1099;&#1081; &#1055;&#1091;&#1090;&#1080;&#1085;</b> — &#1087;&#1083;&#1102;&#1089;&#1091;&#1077;&#1090; &#1082;&#1086; &#1074;&#1089;&#1077;&#1084;<br><b>&#1058;&#1088;&#1072;&#1084;&#1087;</b> — &#1091;&#1084;&#1085;&#1086;&#1078;&#1072;&#1077;&#1090; &#1073;&#1072;&#1088;&#1072;&#1073;&#1072;&#1085;<br><b>&#1051;&#1077;&#1075;&#1077;&#1085;&#1076;&#1072;&#1088;&#1085;&#1099;&#1081; &#1058;&#1088;&#1072;&#1084;&#1087;</b> — &#1091;&#1084;&#1085;&#1086;&#1078;&#1072;&#1077;&#1090; &#1074;&#1089;&#1077;</p>
   <h2>BUY BONUS</h2>
-  <p>Buy Bonus (100x bet): Instantly triggers Hold &amp; Spin.<br>Super Bonus (250x bet): Hold &amp; Spin with all reel multipliers starting at 3x.</p>
+  <p>100x — Hold &amp; Spin. 250x — Super (&#1089;&#1090;&#1072;&#1088;&#1090; &#1089; 3x).</p>
+</div>
 </div>
 
-</div>
 <script>
 (function(){
 'use strict';
 
-/* ====== BALANCE ====== */
-const _urlBal = new URLSearchParams(window.location.search).get('bal');
-let bal = _urlBal ? parseFloat(_urlBal) : 1000;
-
-function updBal() {
-  document.querySelector('.bal span').textContent = bal.toFixed(2);
-  try { window.parent.postMessage({ type: 'balSync', bal: bal.toFixed(2) }, '*'); } catch(e) {}
-}
+/* ===== BALANCE ===== */
+const _urlBal=new URLSearchParams(window.location.search).get('bal');
+let bal=_urlBal?parseFloat(_urlBal):1000;
+function updBal(){document.querySelector('.bal span').textContent=bal.toFixed(2);try{window.parent.postMessage({type:'balSync',bal:bal.toFixed(2)},'*')}catch(e){}}
 updBal();
+window.goBack=function(){try{window.parent.postMessage('back','*')}catch(e){history.back()}};
 
-window.goBack = function() {
-  try { window.parent.postMessage('back', '*'); } catch(e) { history.back(); }
-};
+/* ===== CONFIG ===== */
+const BETS=[0.20,0.40,0.60,0.80,1.00,2.00,3.00,5.00,10.00,20.00];
+let betIdx=4,bet=BETS[betIdx],spinning=false,turbo=false,autoPlay=false,autoCount=0,soundOn=true,anteOn=false;
+const ROWS=5,COLS=5;
+let grid=[];
 
-/* ====== CONFIG ====== */
-const BETS = [0.20, 0.40, 0.60, 0.80, 1.00, 2.00, 3.00, 5.00, 10.00, 20.00];
-let betIdx = 4;
-let bet = BETS[betIdx];
-let spinning = false;
-let turbo = false;
-let autoPlay = false;
-let autoCount = 0;
-let soundOn = true;
-let anteOn = false;
+/* Symbols: 0=Putin,1=Xi,2=Macron,3=King,4=Merkel,5=Kim,6=Trump,7=Wild,8=Scatter */
+const SYM_FACES=['😏','👤','🤵','🤴','👩','😎','🤠','W','💀'];
+const SYM_CSS=['sym-putin','sym-xi','sym-macron','sym-king','sym-merkel','sym-kim','sym-trump','sym-wild','sym-scatter'];
+const SYM_LABELS=['','','','','','','','WILD','FREE SPIN'];
+const PAY_MULT=[0.3,0.5,0.8,1.0,1.5,2.0,5.0,0,0];
 
-const ROWS = 5, COLS = 5;
-let grid = []; /* grid[row][col] = symbol index */
-
-/* Symbols: 0-2 low, 3-5 med, 6-7 high, 8 wild, 9 scatter */
-const SYMS = ['\u{1F535}', '\u{1F7E2}', '\u{1F7E1}', '\u{1F1EA}\u{1F1FA}', '\u{1F1EC}\u{1F1E7}', '\u{1F1E8}\u{1F1F3}', '\u{1F1F7}\u{1F1FA}', '\u{1F1FA}\u{1F1F8}', '\u26A1', '\u{1F480}'];
-const PAY_MULT = [0.5, 0.5, 0.5, 1, 1.5, 2, 3, 5, 0, 0];
-
-function clusterPay(symIdx, count, betAmt) {
-  if (symIdx >= 8) return 0;
-  let m = PAY_MULT[symIdx];
-  let ratio;
-  if (count < 6) ratio = 0.25;
-  else if (count < 8) ratio = 0.5;
-  else if (count < 10) ratio = 0.75;
-  else ratio = 1.0;
-  return betAmt * m * ratio * (count / 4);
+function clusterPay(si,count,b){
+  if(si>=7)return 0;
+  let m=PAY_MULT[si],r;
+  if(count<6)r=0.25;else if(count<8)r=0.5;else if(count<10)r=0.75;else r=1.0;
+  return b*m*r*(count/4);
 }
 
-/* Symbol weights */
-const WEIGHTS =      [22, 22, 22, 10, 8, 6, 4, 2, 2, 2];
-const WEIGHTS_ANTE = [20, 20, 20, 9, 7, 5, 4, 2, 2, 11];
+/* Weights: more low syms, rare trump/wild/scatter */
+const WEIGHTS=     [24,20,16,14,10,8,3,3,2];
+const WEIGHTS_ANTE=[22,18,14,12,9,7,3,3,12];
 
-function rndSym() {
-  let w = anteOn ? WEIGHTS_ANTE : WEIGHTS;
-  let total = 0;
-  for (let i = 0; i < w.length; i++) total += w[i];
-  let r = Math.random() * total, s = 0;
-  for (let i = 0; i < w.length; i++) { s += w[i]; if (r < s) return i; }
+function rndSym(){
+  let w=anteOn?WEIGHTS_ANTE:WEIGHTS,t=0;
+  for(let i=0;i<w.length;i++)t+=w[i];
+  let r=Math.random()*t,s=0;
+  for(let i=0;i<w.length;i++){s+=w[i];if(r<s)return i;}
   return 0;
 }
 
-/* ====== FREE SPINS STATE ====== */
-let fsActive = false;
-let fsLeft = 0;
-let fsTotalWin = 0;
+/* ===== FREE SPINS ===== */
+let fsActive=false,fsLeft=0,fsTotalWin=0;
 
-/* ====== GRID INIT ====== */
-const gridEl = document.getElementById('grid');
-let cellEls = [];
+/* ===== GRID ===== */
+const gridEl=document.getElementById('grid');
+let cellEls=[];
 
-function initGrid() {
-  gridEl.innerHTML = '';
-  cellEls = [];
-  grid = [];
-  for (let r = 0; r < ROWS; r++) {
-    grid[r] = [];
-    cellEls[r] = [];
-    for (let c = 0; c < COLS; c++) {
-      grid[r][c] = rndSym();
-      let cel = document.createElement('div');
-      cel.className = 'cell';
-      renderCell(cel, grid[r][c]);
-      gridEl.appendChild(cel);
-      cellEls[r][c] = cel;
+function renderCell(cel,si){
+  cel.className='cell';
+  let html='<div class="sym '+SYM_CSS[si]+'"><div class="face">'+SYM_FACES[si]+'</div>';
+  if(SYM_LABELS[si])html+='<div class="lbl">'+SYM_LABELS[si]+'</div>';
+  html+='</div>';
+  cel.innerHTML=html;
+}
+
+function initGrid(){
+  gridEl.innerHTML='';cellEls=[];grid=[];
+  for(let r=0;r<ROWS;r++){grid[r]=[];cellEls[r]=[];
+    for(let c=0;c<COLS;c++){grid[r][c]=rndSym();
+      let cel=document.createElement('div');cel.className='cell';
+      renderCell(cel,grid[r][c]);gridEl.appendChild(cel);cellEls[r][c]=cel;
     }
   }
 }
-
-function renderCell(cel, symIdx) {
-  cel.className = 'cell';
-  if (symIdx === 8) {
-    cel.classList.add('wild-cell');
-    cel.innerHTML = SYMS[symIdx] + '<span class="wild-label">WILD</span>';
-  } else {
-    cel.textContent = SYMS[symIdx];
-  }
-}
-
-function syncGridDisplay() {
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      renderCell(cellEls[r][c], grid[r][c]);
-    }
-  }
-}
-
 initGrid();
 
-/* ====== BET ====== */
-window.changeBet = function(dir) {
-  if (spinning || fsActive) return;
-  betIdx = Math.max(0, Math.min(BETS.length - 1, betIdx + dir));
-  bet = BETS[betIdx];
-  document.getElementById('betDisplay').textContent = bet.toFixed(2);
+/* ===== BET ===== */
+window.changeBet=function(dir){
+  if(spinning||fsActive)return;
+  betIdx=Math.max(0,Math.min(BETS.length-1,betIdx+dir));
+  bet=BETS[betIdx];
+  document.getElementById('betDisplay').textContent=bet.toFixed(2);
   updateBuyBtns();
 };
-
-function updateBuyBtns() {
-  document.getElementById('buyBtn').querySelector('.cost').textContent = (bet * 100).toFixed(0);
-  document.getElementById('superBtn').querySelector('.cost').textContent = (bet * 250).toFixed(0);
+function updateBuyBtns(){
+  document.getElementById('buyBtn').querySelector('.cost').textContent=(bet*100).toFixed(0);
+  document.getElementById('superBtn').querySelector('.cost').textContent=(bet*250).toFixed(0);
 }
 updateBuyBtns();
 
-/* ====== TOGGLES ====== */
-window.toggleTurbo = function() { turbo = !turbo; document.getElementById('btnTurbo').classList.toggle('ac', turbo); };
-window.toggleAuto = function() {
-  autoPlay = !autoPlay;
-  document.getElementById('btnAuto').classList.toggle('ac', autoPlay);
-  if (autoPlay) { autoCount = 50; if (!spinning) doSpin(); }
-  else autoCount = 0;
-};
-window.toggleSound = function() { soundOn = !soundOn; document.getElementById('btnSound').classList.toggle('ac', soundOn); };
-window.toggleAnte = function() {
-  if (spinning) return;
-  anteOn = !anteOn;
-  document.getElementById('anteToggle').classList.toggle('ac', anteOn);
-};
-window.showInfo = function() { document.getElementById('infoOv').classList.add('show'); };
-window.hideInfo = function() { document.getElementById('infoOv').classList.remove('show'); };
+/* ===== TOGGLES ===== */
+window.toggleTurbo=function(){turbo=!turbo;document.getElementById('btnTurbo').classList.toggle('ac',turbo)};
+window.toggleAuto=function(){autoPlay=!autoPlay;document.getElementById('btnAuto').classList.toggle('ac',autoPlay);if(autoPlay){autoCount=50;if(!spinning)doSpin()}else autoCount=0};
+window.toggleSound=function(){soundOn=!soundOn;document.getElementById('btnSound').classList.toggle('ac',soundOn)};
+window.toggleAnte=function(){if(spinning)return;anteOn=!anteOn;document.getElementById('anteToggle').classList.toggle('ac',anteOn)};
+window.showInfo=function(){document.getElementById('infoOv').classList.add('show')};
+window.hideInfo=function(){document.getElementById('infoOv').classList.remove('show')};
 
-/* ====== CLUSTER DETECTION (BFS per symbol type) ====== */
-function findClusters() {
-  let allClusters = [];
-  let globalUsed = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
-
-  for (let targetSym = 0; targetSym <= 7; targetSym++) {
-    let visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (visited[r][c]) continue;
-        let s = grid[r][c];
-        if (s !== targetSym && s !== 8) continue;
-
-        let queue = [[r, c]];
-        visited[r][c] = true;
-        let group = [[r, c]];
-        let head = 0;
-        while (head < queue.length) {
-          let [cr, cc] = queue[head++];
-          const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-          for (let d = 0; d < dirs.length; d++) {
-            let nr = cr + dirs[d][0], nc = cc + dirs[d][1];
-            if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || visited[nr][nc]) continue;
-            let ns = grid[nr][nc];
-            if (ns === targetSym || ns === 8) {
-              visited[nr][nc] = true;
-              queue.push([nr, nc]);
-              group.push([nr, nc]);
-            }
-          }
-        }
-
-        let hasBase = group.some(function(g) { return grid[g[0]][g[1]] === targetSym; });
-        if (group.length >= 4 && hasBase) {
-          allClusters.push({ sym: targetSym, cells: group, count: group.length });
+/* ===== CLUSTER DETECTION ===== */
+function findClusters(){
+  let all=[];
+  for(let target=0;target<=6;target++){
+    let vis=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(vis[r][c])continue;
+      let s=grid[r][c];
+      if(s!==target&&s!==7)continue; /* 7=wild */
+      let queue=[[r,c]];vis[r][c]=true;let group=[[r,c]],h=0;
+      while(h<queue.length){
+        let[cr,cc]=queue[h++];
+        for(let[dr,dc]of[[0,1],[0,-1],[1,0],[-1,0]]){
+          let nr=cr+dr,nc=cc+dc;
+          if(nr<0||nr>=ROWS||nc<0||nc>=COLS||vis[nr][nc])continue;
+          let ns=grid[nr][nc];
+          if(ns===target||ns===7){vis[nr][nc]=true;queue.push([nr,nc]);group.push([nr,nc])}
         }
       }
+      if(group.length>=4&&group.some(g=>grid[g[0]][g[1]]===target))
+        all.push({sym:target,cells:group,count:group.length});
     }
   }
-  return allClusters;
+  return all;
 }
 
-/* ====== COUNT SCATTERS ====== */
-function countScatters() {
-  let ct = 0;
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      if (grid[r][c] === 9) ct++;
-  return ct;
+function countScatters(){let ct=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===8)ct++;return ct}
+
+function getWinCells(clusters){let s=new Set();for(let cl of clusters)for(let[r,c]of cl.cells)s.add(r*COLS+c);return s}
+
+/* ===== TUMBLE ===== */
+async function tumble(winSet){
+  let d=turbo?80:200;
+  winSet.forEach(idx=>{let r=Math.floor(idx/COLS),c=idx%COLS;cellEls[r][c].classList.add('removing')});
+  await sleep(d);
+  for(let c=0;c<COLS;c++){
+    let newCol=[];
+    for(let r=0;r<ROWS;r++)if(!winSet.has(r*COLS+c))newCol.push(grid[r][c]);
+    let fill=ROWS-newCol.length;
+    for(let i=0;i<fill;i++)newCol.unshift(rndSym());
+    for(let r=0;r<ROWS;r++)grid[r][c]=newCol[r];
+  }
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){renderCell(cellEls[r][c],grid[r][c]);cellEls[r][c].classList.add('dropping')}
+  await sleep(d+60);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)cellEls[r][c].classList.remove('dropping');
 }
 
-/* ====== GET WIN CELLS (deduplicated) ====== */
-function getWinCells(clusters) {
-  let s = new Set();
-  for (let i = 0; i < clusters.length; i++) {
-    let cells = clusters[i].cells;
-    for (let j = 0; j < cells.length; j++) {
-      s.add(cells[j][0] * COLS + cells[j][1]);
-    }
-  }
-  return s;
-}
+/* ===== MAIN SPIN ===== */
+let spinMult=1,currentWin=0;
 
-/* ====== TUMBLE ====== */
-async function tumble(winSet) {
-  let delay = turbo ? 100 : 220;
+window.doSpin=async function doSpin(){
+  if(spinning)return;
+  if(document.getElementById('hsOverlay').classList.contains('show'))return;
+  let actualBet=anteOn?bet*1.25:bet;
+  if(bal<actualBet){flashBal();autoPlay=false;autoCount=0;document.getElementById('btnAuto').classList.remove('ac');return}
 
-  /* Mark cells for removal animation */
-  winSet.forEach(function(idx) {
-    let r = Math.floor(idx / COLS), c = idx % COLS;
-    cellEls[r][c].classList.add('removing');
-  });
-  await sleep(delay);
+  spinning=true;disableUI(true);
+  bal-=actualBet;bal=Math.round(bal*100)/100;updBal();
+  if(!fsActive){document.getElementById('winDisplay').textContent='';currentWin=0}
+  spinMult=1;updateMultBadge();
 
-  /* Remove winning symbols and drop */
-  for (let c = 0; c < COLS; c++) {
-    let newCol = [];
-    for (let r = 0; r < ROWS; r++) {
-      if (!winSet.has(r * COLS + c)) {
-        newCol.push(grid[r][c]);
-      }
-    }
-    let fill = ROWS - newCol.length;
-    for (let i = 0; i < fill; i++) {
-      newCol.unshift(rndSym());
-    }
-    for (let r = 0; r < ROWS; r++) {
-      grid[r][c] = newCol[r];
-    }
-  }
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)grid[r][c]=rndSym();
+  let d=turbo?40:80;
+  for(let r=0;r<ROWS;r++){for(let c=0;c<COLS;c++){renderCell(cellEls[r][c],grid[r][c]);cellEls[r][c].classList.add('dropping')}await sleep(d)}
+  await sleep(60);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)cellEls[r][c].classList.remove('dropping');
 
-  /* Animate new grid */
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      renderCell(cellEls[r][c], grid[r][c]);
-      cellEls[r][c].classList.add('dropping');
-    }
-  }
-  await sleep(delay + 80);
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      cellEls[r][c].classList.remove('dropping');
-}
-
-/* ====== MAIN SPIN ====== */
-let spinMult = 1;
-let currentWin = 0;
-
-window.doSpin = async function doSpin() {
-  if (spinning) return;
-  if (document.getElementById('hsOverlay').classList.contains('show')) return;
-
-  let actualBet = anteOn ? bet * 1.25 : bet;
-  if (bal < actualBet) {
-    flashBal();
-    autoPlay = false;
-    autoCount = 0;
-    document.getElementById('btnAuto').classList.remove('ac');
-    return;
-  }
-
-  spinning = true;
-  disableUI(true);
-  bal -= actualBet;
-  bal = Math.round(bal * 100) / 100;
-  updBal();
-  document.getElementById('winDisplay').textContent = '';
-  currentWin = 0;
-  spinMult = 1;
-  updateMultBadge();
-
-  /* Fill grid with new random symbols */
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      grid[r][c] = rndSym();
-    }
-  }
-
-  /* Animate reel fill row by row */
-  let delay = turbo ? 50 : 100;
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      renderCell(cellEls[r][c], grid[r][c]);
-      cellEls[r][c].classList.add('dropping');
-    }
-    await sleep(delay);
-  }
-  await sleep(80);
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      cellEls[r][c].classList.remove('dropping');
-
-  /* Process cascading wins */
   await processWins(actualBet);
 
-  /* Check scatters */
-  let scats = countScatters();
-  if (scats >= 3) {
-    /* Award current win first */
-    if (currentWin > 0) {
-      bal += currentWin;
-      bal = Math.round(bal * 100) / 100;
-      updBal();
-      document.getElementById('winDisplay').textContent = currentWin.toFixed(2);
-    }
-    spinning = false;
-    disableUI(false);
-    showFSIntro(false);
+  let scats=countScatters();
+  if(scats>=3&&!fsActive){
+    if(currentWin>0){bal+=currentWin;bal=Math.round(bal*100)/100;updBal();document.getElementById('winDisplay').textContent=currentWin.toFixed(2)}
+    spinning=false;disableUI(false);
+    hsBuySuper=false;
+    document.getElementById('fsIntro').classList.add('show');
     return;
   }
 
-  /* Finalize */
-  if (currentWin > 0) {
-    bal += currentWin;
-    bal = Math.round(bal * 100) / 100;
-    updBal();
-    document.getElementById('winDisplay').textContent = currentWin.toFixed(2);
-    if (currentWin >= actualBet * 10) {
-      showWinOverlay(currentWin);
-      beep(880, 0.3, 0.06);
+  if(currentWin>0){
+    if(fsActive)fsTotalWin+=currentWin;
+    bal+=currentWin;bal=Math.round(bal*100)/100;updBal();
+    document.getElementById('winDisplay').textContent=(fsActive?fsTotalWin:currentWin).toFixed(2);
+    if(currentWin>=actualBet*10){showWinOverlay(fsActive?fsTotalWin:currentWin);beep(880,.3,.06)}
+    else beep(660,.15,.04);
+  }
+
+  /* Free spins */
+  if(fsActive){
+    fsLeft--;
+    if(fsLeft>0){
+      document.getElementById('fsBar').textContent='FREE SPINS: '+fsLeft;
+      spinning=false;disableUI(false);
+      setTimeout(doSpin,turbo?300:700);return;
     } else {
-      beep(660, 0.15, 0.04);
+      document.getElementById('fsBar').classList.remove('show');fsActive=false;
+      if(fsTotalWin>0)showWinOverlay(fsTotalWin);
+      spinning=false;disableUI(false);return;
     }
   }
 
-  spinning = false;
-  disableUI(false);
-
-  /* Auto play */
-  if (autoPlay) {
-    autoCount--;
-    if (autoCount <= 0) {
-      autoPlay = false;
-      document.getElementById('btnAuto').classList.remove('ac');
-      return;
-    }
-    setTimeout(doSpin, turbo ? 300 : 600);
-  }
+  spinning=false;disableUI(false);
+  if(autoPlay){autoCount--;if(autoCount<=0){autoPlay=false;document.getElementById('btnAuto').classList.remove('ac');return}setTimeout(doSpin,turbo?300:600)}
 };
 
-async function processWins(betAmt) {
-  let keepGoing = true;
-  while (keepGoing) {
-    let clusters = findClusters();
-    if (clusters.length === 0) { keepGoing = false; break; }
+async function processWins(betAmt){
+  let go=true;
+  while(go){
+    let clusters=findClusters();
+    if(!clusters.length){go=false;break}
+    let winSet=getWinCells(clusters);
+    let roundWin=0;
+    for(let cl of clusters)roundWin+=clusterPay(cl.sym,cl.count,betAmt);
+    roundWin*=spinMult;roundWin=Math.round(roundWin*100)/100;
+    currentWin+=roundWin;currentWin=Math.round(currentWin*100)/100;
 
-    let winSet = getWinCells(clusters);
-    let roundWin = 0;
-    for (let i = 0; i < clusters.length; i++) {
-      roundWin += clusterPay(clusters[i].sym, clusters[i].count, betAmt);
-    }
-    roundWin *= spinMult;
-    roundWin = Math.round(roundWin * 100) / 100;
-    currentWin += roundWin;
-    currentWin = Math.round(currentWin * 100) / 100;
-
-    /* Highlight winning cells */
-    winSet.forEach(function(idx) {
-      let r = Math.floor(idx / COLS), c = idx % COLS;
-      cellEls[r][c].classList.add('win');
-    });
-
-    /* Screen shake on high symbol clusters */
-    let hasHigh = clusters.some(function(cl) { return cl.sym >= 6 && cl.count >= 6; });
-    if (hasHigh) {
-      document.getElementById('gridOuter').classList.add('shake');
-      setTimeout(function() { document.getElementById('gridOuter').classList.remove('shake'); }, 400);
-    }
-
-    document.getElementById('winDisplay').textContent = currentWin.toFixed(2);
-    beep(440 + spinMult * 80, 0.1, 0.03);
-    await sleep(turbo ? 180 : 450);
-
-    /* Tumble */
-    await tumble(winSet);
-    spinMult++;
-    updateMultBadge();
+    winSet.forEach(idx=>{let r=Math.floor(idx/COLS),c=idx%COLS;cellEls[r][c].classList.add('win')});
+    let hasHigh=clusters.some(cl=>cl.sym>=5&&cl.count>=5);
+    if(hasHigh){document.getElementById('gridOuter').classList.add('shake');setTimeout(()=>document.getElementById('gridOuter').classList.remove('shake'),400)}
+    document.getElementById('winDisplay').textContent=(fsActive?fsTotalWin+currentWin:currentWin).toFixed(2);
+    beep(440+spinMult*80,.1,.03);
+    await sleep(turbo?150:400);
+    await tumble(winSet);spinMult++;updateMultBadge();
   }
 }
 
-function updateMultBadge() {
-  let badge = document.getElementById('multBadge');
-  if (spinMult > 1) {
-    badge.textContent = 'x' + spinMult;
-    badge.classList.add('show');
-  } else {
-    badge.classList.remove('show');
-  }
+function updateMultBadge(){let b=document.getElementById('multBadge');if(spinMult>1){b.textContent='x'+spinMult;b.classList.add('show')}else b.classList.remove('show')}
+function disableUI(d){let sb=document.getElementById('spinBtn');sb.classList.toggle('sp',d&&spinning);sb.classList.toggle('dis',d);document.getElementById('buyBtn').classList.toggle('dis',d);document.getElementById('superBtn').classList.toggle('dis',d)}
+function flashBal(){let b=document.querySelector('.bal');b.style.borderColor='rgba(255,50,50,.8)';setTimeout(()=>b.style.borderColor='',600)}
+
+/* ===== WIN OVERLAY ===== */
+function showWinOverlay(amount){
+  let ov=document.getElementById('winOverlay');
+  document.getElementById('winOvVal').textContent=amount.toFixed(2);
+  let label=amount>=bet*50?'MEGA WIN!':amount>=bet*20?'EPIC WIN!':'BIG WIN!';
+  ov.querySelector('.ov-title').textContent=label;ov.classList.add('show');spawnConfetti();
 }
+window.closeWinOverlay=function(){document.getElementById('winOverlay').classList.remove('show')};
 
-function disableUI(disabled) {
-  let sb = document.getElementById('spinBtn');
-  sb.classList.toggle('sp', disabled && spinning);
-  sb.classList.toggle('dis', disabled);
-  document.getElementById('buyBtn').classList.toggle('dis', disabled);
-  document.getElementById('superBtn').classList.toggle('dis', disabled);
-}
+/* ===== HOLD & SPIN ===== */
+let hsReelMults=[1,1,1,1,1],hsLives=3,hsGridData=[],hsBet=0,hsSpinning=false,hsBuySuper=false;
 
-function flashBal() {
-  let b = document.querySelector('.bal');
-  b.style.borderColor = 'rgba(255,50,50,.8)';
-  setTimeout(function() { b.style.borderColor = ''; }, 600);
-}
-
-/* ====== WIN OVERLAY ====== */
-function showWinOverlay(amount) {
-  let ov = document.getElementById('winOverlay');
-  document.getElementById('winOvVal').textContent = amount.toFixed(2);
-  let label;
-  if (amount >= bet * 50) label = 'MEGA WIN!';
-  else if (amount >= bet * 20) label = 'EPIC WIN!';
-  else label = 'BIG WIN!';
-  ov.querySelector('.ov-title').textContent = label;
-  ov.classList.add('show');
-  spawnConfetti();
-}
-
-window.closeWinOverlay = function() {
-  document.getElementById('winOverlay').classList.remove('show');
-};
-
-/* ====== HOLD & SPIN ====== */
-let hsReelMults = [1, 1, 1, 1, 1];
-let hsLives = 3;
-let hsGridData = []; /* 5x5: null or {type,value,global} */
-let hsBet = 0;
-let hsSpinning = false;
-
-function showFSIntro(isSuper) {
-  hsBet = anteOn ? bet * 1.25 : bet;
-  document.getElementById('fsIntro').classList.add('show');
-  /* Store whether super for when user clicks start */
-  document.getElementById('fsIntro')._isSuper = isSuper;
-}
-
-window.startHoldSpin = function(isSuper) {
-  let intro = document.getElementById('fsIntro');
-  isSuper = intro._isSuper || false;
-  intro.classList.remove('show');
-  hsBet = anteOn ? bet * 1.25 : bet;
-
-  if (isSuper) {
-    hsReelMults = [3, 3, 3, 3, 3];
-  } else {
-    hsReelMults = [1, 1, 1, 1, 1];
-  }
-  hsLives = 3;
-  hsGridData = [];
-  for (let r = 0; r < ROWS; r++) {
-    hsGridData[r] = [];
-    for (let c = 0; c < COLS; c++) {
-      hsGridData[r][c] = null;
-    }
-  }
-  hsSpinning = false;
-  renderHS();
+window.startHoldSpin=function(){
+  document.getElementById('fsIntro').classList.remove('show');
+  hsBet=anteOn?bet*1.25:bet;
+  hsReelMults=hsBuySuper?[3,3,3,3,3]:[1,1,1,1,1];
+  hsLives=3;hsGridData=[];
+  for(let r=0;r<ROWS;r++){hsGridData[r]=[];for(let c=0;c<COLS;c++)hsGridData[r][c]=null}
+  hsSpinning=false;renderHS();
   document.getElementById('hsOverlay').classList.add('show');
 };
 
-function renderHS() {
-  /* Reel multipliers */
-  let multsEl = document.getElementById('hsMults');
-  multsEl.innerHTML = '';
-  for (let c = 0; c < COLS; c++) {
-    let d = document.createElement('div');
-    d.className = 'hs-mult';
-    d.id = 'hsMult' + c;
-    d.innerHTML = '<div class="label">REEL ' + (c + 1) + '</div><div class="val">' + formatMult(hsReelMults[c]) + '</div>';
+function renderHS(){
+  let multsEl=document.getElementById('hsMults');multsEl.innerHTML='';
+  for(let c=0;c<COLS;c++){
+    let d=document.createElement('div');d.className='hs-mult';d.id='hsMult'+c;
+    d.innerHTML='<div class="mlabel">REEL '+(c+1)+'</div><div class="mval">'+fmtMult(hsReelMults[c])+'</div>';
     multsEl.appendChild(d);
   }
-
-  /* Lives */
-  document.getElementById('hsLives').innerHTML = '\u2764\uFE0F ' + hsLives;
-
-  /* Grid */
-  let gEl = document.getElementById('hsGrid');
-  gEl.innerHTML = '';
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      let cel = document.createElement('div');
-      cel.className = 'hs-cell';
-      cel.id = 'hsCell_' + r + '_' + c;
-      let item = hsGridData[r][c];
-      if (item) {
-        cel.classList.add('filled');
-        if (item.global) cel.classList.add('global');
-        let emoji;
-        if (item.type === 'adder') {
-          emoji = item.global ? '\u{1F1F7}\u{1F1FA}\u2728' : '\u{1F1F7}\u{1F1FA}';
-        } else {
-          emoji = item.global ? '\u{1F1FA}\u{1F1F8}\u2728' : '\u{1F1FA}\u{1F1F8}';
-        }
-        cel.innerHTML = emoji + '<span class="hs-val">' + (item.type === 'adder' ? '+' : 'x') + formatVal(item.value) + '</span>';
-      }
-      gEl.appendChild(cel);
+  document.getElementById('hsLives').innerHTML='\u2764\uFE0F '+hsLives;
+  let gEl=document.getElementById('hsGrid');gEl.innerHTML='';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    let cel=document.createElement('div');cel.className='hs-cell';
+    let item=hsGridData[r][c];
+    if(item){
+      cel.classList.add('filled');if(item.global)cel.classList.add('global');
+      let cls=item.type==='adder'?(item.global?'adder-g':'adder'):(item.global?'mult-g':'mult');
+      let icon=item.type==='adder'?'😏':'🤠';
+      let prefix=item.type==='adder'?'+':'x';
+      cel.innerHTML='<div class="hs-sym '+cls+'"><div class="hs-icon">'+icon+(item.global?'✨':'')+'</div><div class="hs-val">'+prefix+fmtVal(item.value)+'</div></div>';
     }
+    gEl.appendChild(cel);
   }
-
-  /* Total win display */
-  let totalMult = 0;
-  for (let i = 0; i < COLS; i++) totalMult += hsReelMults[i];
-  document.getElementById('hsTotal').textContent = (hsBet * totalMult).toFixed(2);
+  let totalM=0;for(let i=0;i<COLS;i++)totalM+=hsReelMults[i];
+  document.getElementById('hsTotal').textContent=(hsBet*totalM).toFixed(2);
 }
 
-function formatMult(v) {
-  if (v >= 10000) return (v / 1000).toFixed(0) + 'K';
-  if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
-  if (v % 1 === 0) return v + 'x';
-  return v.toFixed(1) + 'x';
-}
+function fmtMult(v){if(v>=10000)return(v/1000).toFixed(0)+'K';if(v>=1000)return(v/1000).toFixed(1)+'K';return(v%1===0?v:v.toFixed(1))+'x'}
+function fmtVal(v){return v>=1000?(v/1000).toFixed(0)+'K':''+v}
 
-function formatVal(v) {
-  if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
-  return '' + v;
-}
+const HS_LAND=0.18;
+const HS_ADD_V=[1,2,5,10,15,30,50,75,100],HS_ADD_W=[35,28,15,8,5,4,2,1.5,1.5];
+const HS_MUL_V=[2,3,5,10,20,50,100],HS_MUL_W=[35,25,17,10,6,4,3];
+function wPick(v,w){let t=0;for(let i=0;i<w.length;i++)t+=w[i];let r=Math.random()*t,s=0;for(let i=0;i<v.length;i++){s+=w[i];if(r<s)return v[i]}return v[0]}
 
-/* HS bonus symbol generation */
-const HS_LAND_CHANCE = 0.18;
-const HS_ADDER_VALS =    [1,  2,  5,  10, 15, 30, 50, 75, 100];
-const HS_ADDER_WEIGHTS = [35, 28, 15, 8,  5,  4,  2,  1.5, 1.5];
-const HS_MULT_VALS =    [2,  3,  5,  10, 20, 50, 100];
-const HS_MULT_WEIGHTS = [35, 25, 17, 10, 6,  4,  3];
-
-function weightedPick(vals, weights) {
-  let total = 0;
-  for (let i = 0; i < weights.length; i++) total += weights[i];
-  let r = Math.random() * total, s = 0;
-  for (let i = 0; i < vals.length; i++) { s += weights[i]; if (r < s) return vals[i]; }
-  return vals[0];
-}
-
-window.hsDoSpin = async function() {
-  if (hsSpinning) return;
-  hsSpinning = true;
+window.hsDoSpin=async function(){
+  if(hsSpinning)return;hsSpinning=true;
   document.getElementById('hsSpinBtn').classList.add('dis');
-
-  let landed = false;
-  let newCells = [];
-
-  /* Determine which cells land symbols */
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (hsGridData[r][c] !== null) continue;
-      if (Math.random() < HS_LAND_CHANCE) {
-        landed = true;
-        let isGlobal = Math.random() < 0.03;
-        let isMult = Math.random() < 0.30;
-        let type = isMult ? 'mult' : 'adder';
-        let value;
-        if (type === 'adder') {
-          value = weightedPick(HS_ADDER_VALS, HS_ADDER_WEIGHTS);
-        } else {
-          value = weightedPick(HS_MULT_VALS, HS_MULT_WEIGHTS);
-        }
-        hsGridData[r][c] = { type: type, value: value, global: isGlobal };
-        newCells.push({ r: r, c: c, type: type, value: value, global: isGlobal });
-      }
+  let landed=false,newC=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(hsGridData[r][c])continue;
+    if(Math.random()<HS_LAND){
+      landed=true;
+      let isG=Math.random()<0.03,isM=Math.random()<0.28;
+      let type=isM?'mult':'adder';
+      let value=type==='adder'?wPick(HS_ADD_V,HS_ADD_W):wPick(HS_MUL_V,HS_MUL_W);
+      hsGridData[r][c]={type,value,global:isG};
+      newC.push({r,c,type,value,global:isG});
     }
   }
-
-  /* Apply effects to reel multipliers */
-  for (let i = 0; i < newCells.length; i++) {
-    let nc = newCells[i];
-    if (nc.type === 'adder') {
-      if (nc.global) {
-        for (let j = 0; j < COLS; j++) hsReelMults[j] += nc.value;
-      } else {
-        hsReelMults[nc.c] += nc.value;
-      }
-    } else {
-      if (nc.global) {
-        for (let j = 0; j < COLS; j++) hsReelMults[j] *= nc.value;
-      } else {
-        hsReelMults[nc.c] *= nc.value;
-      }
+  for(let nc of newC){
+    if(nc.type==='adder'){
+      if(nc.global)for(let j=0;j<COLS;j++)hsReelMults[j]+=nc.value;
+      else hsReelMults[nc.c]+=nc.value;
+    }else{
+      if(nc.global)for(let j=0;j<COLS;j++)hsReelMults[j]*=nc.value;
+      else hsReelMults[nc.c]*=nc.value;
     }
   }
-
-  if (landed) {
-    hsLives = 3;
-    beep(550, 0.15, 0.04);
-  } else {
-    hsLives--;
-    beep(220, 0.2, 0.03);
-  }
-
+  if(landed){hsLives=3;beep(550,.15,.04)}else{hsLives--;beep(220,.2,.03)}
   renderHS();
-
-  /* Flash affected reel multipliers */
-  if (newCells.length > 0) {
-    let affectedReels = new Set();
-    for (let i = 0; i < newCells.length; i++) {
-      if (newCells[i].global) {
-        for (let j = 0; j < COLS; j++) affectedReels.add(j);
-      } else {
-        affectedReels.add(newCells[i].c);
-      }
-    }
-    affectedReels.forEach(function(ci) {
-      let el = document.getElementById('hsMult' + ci);
-      if (el) {
-        el.classList.add('flash');
-        setTimeout(function() { el.classList.remove('flash'); }, 600);
-      }
-    });
+  if(newC.length>0){
+    let affected=new Set();
+    for(let nc of newC)if(nc.global)for(let j=0;j<COLS;j++)affected.add(j);else affected.add(nc.c);
+    affected.forEach(ci=>{let el=document.getElementById('hsMult'+ci);if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),600)}});
   }
-
-  await sleep(turbo ? 250 : 500);
-
-  if (hsLives <= 0) {
-    /* End Hold & Spin */
-    await sleep(400);
-    let totalMult = 0;
-    for (let i = 0; i < COLS; i++) totalMult += hsReelMults[i];
-    let hsWin = hsBet * totalMult;
-    hsWin = Math.round(hsWin * 100) / 100;
-    bal += hsWin;
-    bal = Math.round(bal * 100) / 100;
-    updBal();
+  await sleep(turbo?200:450);
+  if(hsLives<=0){
+    await sleep(350);
+    let totalM=0;for(let i=0;i<COLS;i++)totalM+=hsReelMults[i];
+    let hsWin=hsBet*totalM;hsWin=Math.round(hsWin*100)/100;
+    bal+=hsWin;bal=Math.round(bal*100)/100;updBal();
     document.getElementById('hsOverlay').classList.remove('show');
-    document.getElementById('winDisplay').textContent = hsWin.toFixed(2);
-    if (hsWin > 0) {
-      showWinOverlay(hsWin);
-      spawnConfetti();
-    }
-    spinning = false;
-    disableUI(false);
-    hsSpinning = false;
-    return;
+    document.getElementById('winDisplay').textContent=hsWin.toFixed(2);
+    if(hsWin>0){showWinOverlay(hsWin);spawnConfetti()}
+    spinning=false;disableUI(false);hsSpinning=false;return;
   }
-
-  hsSpinning = false;
-  document.getElementById('hsSpinBtn').classList.remove('dis');
+  hsSpinning=false;document.getElementById('hsSpinBtn').classList.remove('dis');
 };
 
-/* ====== BUY BONUS ====== */
-let pendingBuyMult = 0;
-
-window.buyBonus = function(multiplier) {
-  if (spinning) return;
-  if (document.getElementById('hsOverlay').classList.contains('show')) return;
-  let cost = bet * multiplier;
-  if (bal < cost) { flashBal(); return; }
-
-  /* Show confirmation */
-  pendingBuyMult = multiplier;
-  let title = multiplier === 250 ? 'SUPER BONUS?' : 'BUY BONUS?';
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmCost').textContent = cost.toFixed(2);
+/* ===== BUY BONUS ===== */
+let pendingBuyMult=0;
+window.buyBonus=function(m){
+  if(spinning||document.getElementById('hsOverlay').classList.contains('show'))return;
+  let cost=bet*m;if(bal<cost){flashBal();return}
+  pendingBuyMult=m;
+  document.getElementById('confirmTitle').textContent=m===250?'SUPER BONUS?':'BUY BONUS?';
+  document.getElementById('confirmCost').textContent=cost.toFixed(2);
   document.getElementById('confirmOv').classList.add('show');
 };
-
-window.confirmBuyYes = function() {
+window.confirmBuyYes=function(){
   document.getElementById('confirmOv').classList.remove('show');
-  let cost = bet * pendingBuyMult;
-  if (bal < cost) { flashBal(); return; }
-  bal -= cost;
-  bal = Math.round(bal * 100) / 100;
-  updBal();
-  spinning = true;
-  disableUI(true);
-  hsBet = bet;
-  autoPlay = false;
-  autoCount = 0;
-  document.getElementById('btnAuto').classList.remove('ac');
-
-  let isSuper = pendingBuyMult === 250;
-  hsReelMults = isSuper ? [3, 3, 3, 3, 3] : [1, 1, 1, 1, 1];
-  hsLives = 3;
-  hsGridData = [];
-  for (let r = 0; r < ROWS; r++) {
-    hsGridData[r] = [];
-    for (let c = 0; c < COLS; c++) hsGridData[r][c] = null;
-  }
-  hsSpinning = false;
-  renderHS();
+  let cost=bet*pendingBuyMult;if(bal<cost){flashBal();return}
+  bal-=cost;bal=Math.round(bal*100)/100;updBal();
+  spinning=true;disableUI(true);hsBet=bet;
+  autoPlay=false;autoCount=0;document.getElementById('btnAuto').classList.remove('ac');
+  hsBuySuper=pendingBuyMult===250;
+  hsReelMults=hsBuySuper?[3,3,3,3,3]:[1,1,1,1,1];
+  hsLives=3;hsGridData=[];
+  for(let r=0;r<ROWS;r++){hsGridData[r]=[];for(let c=0;c<COLS;c++)hsGridData[r][c]=null}
+  hsSpinning=false;renderHS();
   document.getElementById('hsOverlay').classList.add('show');
 };
+window.cancelBuy=function(){document.getElementById('confirmOv').classList.remove('show');pendingBuyMult=0};
 
-window.cancelBuy = function() {
-  document.getElementById('confirmOv').classList.remove('show');
-  pendingBuyMult = 0;
-};
+/* ===== CONFETTI ===== */
+const cvs=document.getElementById('fx'),ctx=cvs.getContext('2d');
+let particles=[],dpr=window.devicePixelRatio||1;
+function resizeCanvas(){dpr=window.devicePixelRatio||1;cvs.width=cvs.offsetWidth*dpr;cvs.height=cvs.offsetHeight*dpr}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
 
-/* ====== CANVAS PARTICLE FX ====== */
-const cvs = document.getElementById('fx');
-const ctx = cvs.getContext('2d');
-let particles = [];
-let dpr = window.devicePixelRatio || 1;
-
-function resizeCanvas() {
-  dpr = window.devicePixelRatio || 1;
-  cvs.width = cvs.offsetWidth * dpr;
-  cvs.height = cvs.offsetHeight * dpr;
+function spawnConfetti(){
+  let w=cvs.offsetWidth,h=cvs.offsetHeight;
+  let colors=['#ff3333','#ffd700','#ff8800','#7df56a','#00ccff','#ff44ff','#fff'];
+  for(let i=0;i<100;i++)particles.push({x:w/2+(Math.random()-.5)*140,y:h*.4,vx:(Math.random()-.5)*12,vy:-Math.random()*16-6,size:Math.random()*7+3,color:colors[Math.floor(Math.random()*colors.length)],life:1,decay:.005+Math.random()*.006,rot:Math.random()*Math.PI*2,rotV:(Math.random()-.5)*.25});
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-function spawnConfetti() {
-  let w = cvs.offsetWidth, h = cvs.offsetHeight;
-  let colors = ['#ff4444', '#ffcc00', '#ff8800', '#7df56a', '#00ccff', '#ff66ff'];
-  for (let i = 0; i < 80; i++) {
-    particles.push({
-      x: w / 2 + (Math.random() - 0.5) * 120,
-      y: h * 0.4,
-      vx: (Math.random() - 0.5) * 10,
-      vy: -Math.random() * 14 - 5,
-      size: Math.random() * 6 + 3,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      life: 1,
-      decay: 0.006 + Math.random() * 0.006,
-      rot: Math.random() * Math.PI * 2,
-      rotV: (Math.random() - 0.5) * 0.2
-    });
-  }
-}
-
-function animFx() {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cvs.offsetWidth, cvs.offsetHeight);
-  for (let i = particles.length - 1; i >= 0; i--) {
-    let p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.22;
-    p.vx *= 0.99;
-    p.life -= p.decay;
-    p.rot += p.rotV;
-    if (p.life <= 0) { particles.splice(i, 1); continue; }
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rot);
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-    ctx.restore();
+function animFx(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cvs.offsetWidth,cvs.offsetHeight);
+  for(let i=particles.length-1;i>=0;i--){
+    let p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.2;p.vx*=.99;p.life-=p.decay;p.rot+=p.rotV;
+    if(p.life<=0){particles.splice(i,1);continue}
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;
+    ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*.55);ctx.restore();
   }
   requestAnimationFrame(animFx);
 }
 animFx();
 
-/* ====== AUDIO ====== */
+/* ===== AUDIO ===== */
 let audioCtx;
-function beep(freq, dur, vol) {
-  if (!soundOn) return;
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let o = audioCtx.createOscillator();
-    let g = audioCtx.createGain();
-    o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value = freq;
-    o.type = 'sine';
-    g.gain.value = vol || 0.04;
-    o.start();
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-    o.stop(audioCtx.currentTime + dur + 0.01);
-  } catch(e) {}
+function beep(freq,dur,vol){
+  if(!soundOn)return;
+  try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);
+  o.frequency.value=freq;o.type='sine';g.gain.value=vol||.04;o.start();
+  g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur+.01)}catch(e){}
 }
 
-/* ====== UTILS ====== */
-function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-/* ====== PREVENT DOUBLE TAP ZOOM ====== */
-document.addEventListener('touchstart', function(e) {
-  if (e.touches.length > 1) e.preventDefault();
-}, { passive: false });
-let lastTap = 0;
-document.addEventListener('touchend', function(e) {
-  let now = Date.now();
-  if (now - lastTap < 300) e.preventDefault();
-  lastTap = now;
-}, { passive: false });
-
-/* ====== INIT AUDIO CONTEXT ON FIRST TOUCH ====== */
-document.addEventListener('touchstart', function initAudio() {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch(e) {}
-  document.removeEventListener('touchstart', initAudio);
-}, { once: true });
+/* Prevent zoom */
+document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
+let lastTap=0;
+document.addEventListener('touchend',e=>{let n=Date.now();if(n-lastTap<300)e.preventDefault();lastTap=n},{passive:false});
+document.addEventListener('touchstart',function init(){try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}document.removeEventListener('touchstart',init)},{once:true});
 
 })();
 </script>
