@@ -825,6 +825,14 @@ async function handleBotWebhook(req: Request) {
   // Команда /start
   const text = msg.text || "";
   if (text === "/start" || text.startsWith("/start")) {
+    // Создаём пользователя если его нет
+    await supabase.from("users").upsert({
+      tg_id: tgId,
+      tg_username: msg.from.username || null,
+      tg_first_name: msg.from.first_name || null,
+      last_active: new Date().toISOString(),
+    }, { onConflict: "tg_id" });
+
     // Проверяем есть ли уже номер
     const { data: user } = await supabase.from("users").select("phone").eq("tg_id", tgId).single();
 
@@ -876,6 +884,32 @@ async function handleBotWebhook(req: Request) {
       parse_mode: "Markdown",
     });
     return json({ ok: true });
+  }
+
+  // Любое другое сообщение — проверяем номер, если нет — запрашиваем
+  const { data: anyUser } = await supabase.from("users").select("phone").eq("tg_id", tgId).single();
+  if (!anyUser?.phone) {
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `📱 Для доступа к Sphere поделитесь номером телефона 👇`,
+      reply_markup: {
+        keyboard: [[
+          { text: "📱 Поделиться номером", request_contact: true }
+        ]],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+      },
+    });
+  } else {
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `🎰 Нажмите кнопку ниже, чтобы играть!`,
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "🎰 Открыть Sphere", web_app: { url: WEBAPP_URL } }
+        ]],
+      },
+    });
   }
 
   return json({ ok: true });
