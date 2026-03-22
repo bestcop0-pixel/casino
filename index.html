@@ -1291,12 +1291,14 @@ html, body {
 
 <!-- Withdraw Modal -->
 <div id="withdrawModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:90%;max-width:360px;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:90%;max-width:360px;max-height:80vh;overflow-y:auto;">
     <div style="font-weight:700;font-size:18px;margin-bottom:8px;text-align:center;">💸 Вывод USDT</div>
     <div style="color:var(--text2);font-size:13px;text-align:center;margin-bottom:16px;">Доступно: <span id="withAvail">0</span> USDT · Мин: 5 USDT</div>
-    <input id="withAmount" type="number" placeholder="Сумма вывода" min="5" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:15px;outline:none;margin-bottom:16px;">
+    <input id="withTrc20" type="text" placeholder="TRC20 адрес кошелька (USDT)" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:15px;outline:none;margin-bottom:12px;box-sizing:border-box;">
+    <input id="withAmount" type="number" placeholder="Сумма вывода" min="5" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:15px;outline:none;margin-bottom:16px;box-sizing:border-box;">
     <button onclick="confirmWithdraw()" style="width:100%;padding:14px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer;">Вывести</button>
     <button onclick="closeWithdrawModal()" style="width:100%;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;margin-top:8px;">Отмена</button>
+    <div id="withHistory" style="margin-top:16px;"></div>
   </div>
 </div>
 
@@ -1613,6 +1615,9 @@ html, body {
             <button onclick="redeemPromo()" style="padding:10px 18px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#000;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">Активировать</button>
           </div>
         </div>
+
+        <!-- Withdrawal Requests -->
+        <div id="walletWithdrawals" style="margin-bottom:12px;"></div>
 
         <div class="section-header" style="padding:8px 0 4px">
           <div class="section-title" style="font-size:15px;">История</div>
@@ -2581,6 +2586,7 @@ function bjEnd(reason){
 function updateWallet(){
   document.getElementById('walletBal').textContent=fmt(S.balance);
   document.getElementById('walletUsd').textContent=`USDT · Tether`;
+  loadWalletWithdrawals();
   const tl=document.getElementById('txList');
   const txIcons = {
     win: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2l3 6 6 1-4.5 4 1.5 6L12 16l-6 3 1.5-6L3 9l6-1z" stroke="var(--green)" stroke-width="1.8" fill="rgba(0,230,118,0.2)" stroke-linejoin="round"/></svg>`,
@@ -2639,23 +2645,63 @@ function walletWithdraw(){
   if(S.balance < 5){ showToast('Минимум для вывода: 5 USDT'); return; }
   document.getElementById('withAvail').textContent = fmt(S.balance);
   document.getElementById('withAmount').value = '';
+  document.getElementById('withTrc20').value = '';
   document.getElementById('withdrawModal').style.display = 'flex';
+  loadWithdrawHistory();
 }
 function closeWithdrawModal(){ document.getElementById('withdrawModal').style.display='none'; }
+async function loadWithdrawHistory(){
+  const data = await api('payments-admin', '/pay/my-withdrawals', {});
+  const el = document.getElementById('withHistory');
+  if(!data || !data.withdrawals || data.withdrawals.length === 0){ el.innerHTML=''; return; }
+  const statusMap = { pending: {label:'Ожидание',color:'#f59e0b'}, processing: {label:'В обработке',color:'#3b82f6'}, completed: {label:'Выполнено',color:'var(--green)'}, rejected: {label:'Отклонено',color:'var(--red)'} };
+  el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:8px;">Заявки на вывод</div>' +
+    data.withdrawals.map(w => {
+      const st = statusMap[w.status] || {label:w.status,color:'#888'};
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div><div style="font-weight:600;font-size:13px;">${fmt(parseFloat(w.amount))} USDT</div><div style="font-size:11px;color:var(--text3);">${new Date(w.created_at).toLocaleString('ru-RU')}</div></div>
+        <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${st.color}22;color:${st.color};">${st.label}</span>
+      </div>`;
+    }).join('');
+}
 async function confirmWithdraw(){
   const amount = parseFloat(document.getElementById('withAmount').value);
+  const trc20_address = (document.getElementById('withTrc20').value||'').trim();
+  if(!trc20_address || !trc20_address.startsWith('T') || trc20_address.length !== 34){
+    showToast('Введите корректный TRC20 адрес (начинается с T, 34 символа)'); return;
+  }
   if(!amount || amount < 5){ showToast('Минимальный вывод: 5 USDT'); return; }
   if(amount > S.balance){ showToast('Недостаточно средств'); return; }
   closeWithdrawModal();
   showToast('Обработка вывода...');
-  const data = await api('payments-admin', '/pay/withdraw', { amount });
+  const data = await api('payments-admin', '/pay/withdraw', { amount, trc20_address });
   if(data && data.success){
     S.balance = data.balance;
     document.getElementById('balDisp').textContent = fmt(S.balance);
-    showToast(`${fmt(amount)} USDT отправлено на ваш кошелёк`);
+    showToast('Заявка на вывод создана');
     S.transactions.unshift({ type:'withdraw', name:'Вывод USDT', amount:amount, date:'Только что', plus:false });
     if(curScreen==='wallet') updateWallet();
   }
+}
+
+async function loadWalletWithdrawals(){
+  const el = document.getElementById('walletWithdrawals');
+  if(!el) return;
+  const data = await api('payments-admin', '/pay/my-withdrawals', {});
+  if(!data || !data.withdrawals || data.withdrawals.length === 0){ el.innerHTML=''; return; }
+  const statusMap = { pending: {label:'Ожидание',color:'#f59e0b'}, processing: {label:'В обработке',color:'#3b82f6'}, completed: {label:'Выполнено',color:'var(--green)'}, rejected: {label:'Отклонено',color:'var(--red)'} };
+  el.innerHTML = '<div class="section-header" style="padding:8px 0 4px"><div class="section-title" style="font-size:15px;">Заявки на вывод</div></div>' +
+    data.withdrawals.map(w => {
+      const st = statusMap[w.status] || {label:w.status,color:'#888'};
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:4px;background:var(--bg-elevated);border-radius:var(--radius-xs);border:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${fmt(parseFloat(w.amount))} USDT</div>
+          <div style="font-size:11px;color:var(--text3);">${w.trc20_address.slice(0,6)}...${w.trc20_address.slice(-4)}</div>
+          <div style="font-size:11px;color:var(--text3);">${new Date(w.created_at).toLocaleString('ru-RU')}</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:${st.color}22;color:${st.color};">${st.label}</span>
+      </div>`;
+    }).join('');
 }
 
 // ═══ PROMO ═══

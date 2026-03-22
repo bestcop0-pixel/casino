@@ -141,6 +141,7 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
     <button class="tab" onclick="switchTab('promos',this)">Промокоды</button>
     <button class="tab" onclick="switchTab('spins',this)">Фри-спины</button>
     <button class="tab" onclick="switchTab('txs',this)">Транзакции</button>
+    <button class="tab" onclick="switchTab('withdrawals',this)">Выводы</button>
   </div>
 
   <!-- ═══ DASHBOARD ═══ -->
@@ -183,6 +184,21 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
     </div>
     <div id="txsList"></div>
     <div class="pager" id="txsPager"></div>
+  </div>
+
+  <!-- ═══ WITHDRAWALS ═══ -->
+  <div class="section" id="sec-withdrawals">
+    <div class="inp-row" style="margin-bottom:12px;">
+      <select class="inp" id="wdStatusFilter" onchange="loadWithdrawals(0)" style="max-width:160px;">
+        <option value="">Все статусы</option>
+        <option value="pending">Ожидание</option>
+        <option value="processing">В обработке</option>
+        <option value="completed">Выполнено</option>
+        <option value="rejected">Отклонено</option>
+      </select>
+    </div>
+    <div id="wdList"></div>
+    <div class="pager" id="wdPager"></div>
   </div>
 </div>
 
@@ -397,6 +413,7 @@ function switchTab(tab, btn) {
   if (tab === 'promos') loadPromos();
   if (tab === 'spins') loadSpins();
   if (tab === 'txs') loadTxs(0);
+  if (tab === 'withdrawals') loadWithdrawals(0);
 }
 
 // ═══ DASHBOARD ═══
@@ -645,6 +662,68 @@ async function loadTxs(page) {
     `;
   } else {
     pager.innerHTML = total > 0 ? `<span style="color:var(--text3);font-size:12px;">${total} записей</span>` : '';
+  }
+}
+
+// ═══ WITHDRAWALS ═══
+let wdPage = 0;
+
+async function loadWithdrawals(page) {
+  wdPage = page;
+  const status = document.getElementById('wdStatusFilter').value || null;
+  const data = await api('payments-admin', '/admin/withdrawals', { page, status });
+  if (!data) return;
+
+  const statusLabels = { pending:'Ожидание', processing:'В обработке', completed:'Выполнено', rejected:'Отклонено' };
+  const statusCls = { pending:'badge-accent', processing:'badge-blue', completed:'badge-green', rejected:'badge-red' };
+
+  document.getElementById('wdList').innerHTML = (data.withdrawals || []).map(w => `
+    <div class="card" style="padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${w.users?.tg_first_name || 'Noname'} ${w.users?.tg_username ? '@'+w.users.tg_username : ''}</div>
+          <div style="font-size:12px;color:var(--text2);">TG ID: ${w.users?.tg_id || '—'}</div>
+        </div>
+        <span class="badge ${statusCls[w.status]||'badge-blue'}">${statusLabels[w.status]||w.status}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">
+        Сумма: <b style="color:white;">${fmt(parseFloat(w.amount))} USDT</b> ·
+        Адрес: <code style="font-size:11px;color:var(--accent);">${w.trc20_address}</code>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">
+        Создано: ${new Date(w.created_at).toLocaleString('ru-RU')}
+        ${w.admin_note ? ' · Заметка: '+w.admin_note : ''}
+      </div>
+      ${w.status === 'pending' || w.status === 'processing' ? `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${w.status === 'pending' ? `<button class="btn btn-sm btn-blue" onclick="updateWithdrawStatus('${w.id}','processing')">В обработку</button>` : ''}
+          <button class="btn btn-sm btn-green" onclick="updateWithdrawStatus('${w.id}','completed')">Выполнено</button>
+          <button class="btn btn-sm btn-red" onclick="updateWithdrawStatus('${w.id}','rejected',prompt('Причина отклонения:'))">Отклонить</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('') || '<div style="color:var(--text3);text-align:center;padding:20px;">Нет заявок на вывод</div>';
+
+  const total = data.total || 0;
+  const pages = Math.ceil(total / 50);
+  const pager = document.getElementById('wdPager');
+  if (pages > 1) {
+    pager.innerHTML = `
+      <button class="btn btn-sm btn-ghost" ${page<=0?'disabled':''} onclick="loadWithdrawals(${page-1})">Назад</button>
+      <span style="color:var(--text2);font-size:13px;">${page+1} / ${pages} (${total})</span>
+      <button class="btn btn-sm btn-ghost" ${page>=pages-1?'disabled':''} onclick="loadWithdrawals(${page+1})">Далее</button>
+    `;
+  } else {
+    pager.innerHTML = total > 0 ? `<span style="color:var(--text3);font-size:12px;">${total} заявок</span>` : '';
+  }
+}
+
+async function updateWithdrawStatus(id, status, admin_note) {
+  if (status === 'rejected' && admin_note === null) return; // User cancelled prompt
+  const data = await api('payments-admin', '/admin/withdrawals', { action: 'update_status', id, status, admin_note: admin_note || '' });
+  if (data && data.success) {
+    showToast('Статус обновлён');
+    loadWithdrawals(wdPage);
   }
 }
 

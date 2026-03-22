@@ -184,8 +184,10 @@ async function handleWithdraw(req: Request) {
   const user = await getUserByToken(req);
   if (!user) return err("Unauthorized", 401);
 
-  const { amount } = await req.json();
+  const { amount, trc20_address } = await req.json();
   if (!amount || amount < 5) return err("Минимальный вывод: 5 USDT");
+  if (!trc20_address || !trc20_address.startsWith("T") || trc20_address.length !== 34)
+    return err("Некорректный TRC20 адрес");
   if (amount > parseFloat(user.balance)) return err("Недостаточно средств");
 
   // Deduct balance first
@@ -193,35 +195,99 @@ async function handleWithdraw(req: Request) {
     p_user_id: user.id,
     p_delta: -amount,
     p_type: "withdraw",
-    p_meta: { method: "crypto_bot" },
+    p_meta: { trc20_address },
   });
 
   if (balErr) return err("Ошибка списания");
 
-  // Send via CryptoBot transfer
-  const result = await cryptoBotRequest("transfer", {
-    user_id: user.tg_id,
-    asset: "USDT",
-    amount: amount.toString(),
-    spend_id: crypto.randomUUID(),
+  // Create withdrawal record
+  const { error: wdErr } = await supabase.from("withdrawals").insert({
+    user_id: user.id,
+    amount,
+    trc20_address,
+    status: "pending",
   });
 
-  if (!result.ok) {
-    // Refund if transfer failed
-    await supabase.rpc("change_balance", {
-      p_user_id: user.id,
-      p_delta: amount,
-      p_type: "refund",
-      p_meta: { reason: "transfer_failed" },
-    });
-    return err("Ошибка отправки. Средства возвращены.");
+  if (wdErr) {
+    console.error("Withdrawal insert error:", wdErr);
   }
+
+  // Get fresh balance
+  const { data: freshUser } = await supabase.from("users")
+    .select("balance").eq("id", user.id).single();
 
   return json({
     success: true,
     amount,
-    balance: parseFloat(user.balance) - amount,
+    balance: parseFloat(freshUser?.balance || "0"),
   });
+}
+
+// ═══ ROUTE: /pay/my-withdrawals ═══
+async function handleMyWithdrawals(req: Request) {
+  const user = await getUserByToken(req);
+  if (!user) return err("Unauthorized", 401);
+
+  const { data: withdrawals } = await supabase.from("withdrawals")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return json({ withdrawals: withdrawals || [] });
+}
+
+// ═══ ROUTE: /admin/withdrawals ═══
+async function handleAdminWithdrawals(req: Request) {
+  const admin = await requireAdmin(req);
+  if (!admin) return err("Forbidden", 403);
+
+  const body = await req.json();
+
+  if (body.action === "update_status") {
+    const { id, status, admin_note } = body;
+    if (!id || !status) return err("Missing id or status");
+    if (!["pending", "processing", "completed", "rejected"].includes(status))
+      return err("Invalid status");
+
+    const { error } = await supabase.from("withdrawals").update({
+      status,
+      admin_note: admin_note || null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id);
+
+    if (error) return err("Ошибка обновления: " + error.message);
+
+    // If rejected, refund the balance
+    if (status === "rejected") {
+      const { data: wd } = await supabase.from("withdrawals")
+        .select("user_id, amount").eq("id", id).single();
+      if (wd) {
+        await supabase.rpc("change_balance", {
+          p_user_id: wd.user_id,
+          p_delta: parseFloat(wd.amount as string),
+          p_type: "refund",
+          p_meta: { reason: "withdrawal_rejected", withdrawal_id: id },
+        });
+      }
+    }
+
+    return json({ success: true });
+  }
+
+  // List withdrawals
+  const page = body.page || 0;
+  const statusFilter = body.status || null;
+
+  let query = supabase.from("withdrawals")
+    .select("*, users(tg_username, tg_first_name, tg_id)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(page * 50, (page + 1) * 50 - 1);
+
+  if (statusFilter) query = query.eq("status", statusFilter);
+
+  const { data: withdrawals, count } = await query;
+  return json({ withdrawals: withdrawals || [], total: count || 0, page });
 }
 
 // ═══ ROUTE: /pay/check ═══
@@ -430,8 +496,10 @@ serve(async (req: Request) => {
       case path === "/pay/create-invoice": return await handleCreateInvoice(req);
       case path === "/pay/webhook": return await handleWebhook(req);
       case path === "/pay/withdraw": return await handleWithdraw(req);
+      case path === "/pay/my-withdrawals": return await handleMyWithdrawals(req);
       case path === "/pay/check": return await handlePayCheck(req);
       case path === "/admin/stats": return await handleAdminStats(req);
+      case path === "/admin/withdrawals": return await handleAdminWithdrawals(req);
       case path === "/admin/users": return await handleAdminUsers(req);
       case path === "/admin/promos": return await handleAdminPromos(req);
       case path === "/admin/free-spins": return await handleAdminFreeSpins(req);
