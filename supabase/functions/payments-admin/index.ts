@@ -18,7 +18,7 @@ const CRYPTO_BOT_API = "https://pay.crypt.bot/api";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, crypto-pay-api-signature",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, crypto-pay-api-signature, x-admin-password",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
@@ -49,9 +49,19 @@ async function getUserByToken(req: Request) {
 async function requireAdmin(req: Request) {
   // Check admin password from header
   const adminPass = req.headers.get("x-admin-password");
-  if (adminPass === ADMIN_PASSWORD) {
+  console.log("requireAdmin: got pass =", adminPass?.substring(0,4), "expected =", ADMIN_PASSWORD?.substring(0,4));
+  if (adminPass && adminPass === ADMIN_PASSWORD) {
     return { id: "admin", is_admin: true, tg_id: 0, balance: 0 };
   }
+  // Also check from body
+  try {
+    const clone = req.clone();
+    const body = await clone.json();
+    if (body.admin_password && body.admin_password === ADMIN_PASSWORD) {
+      return { id: "admin", is_admin: true, tg_id: 0, balance: 0 };
+    }
+  } catch {}
+
   // Fallback: check JWT token
   const user = await getUserByToken(req);
   if (!user) return null;

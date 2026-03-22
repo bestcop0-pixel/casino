@@ -316,7 +316,10 @@ async function api(func, path, body={}) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (TOKEN) headers['Authorization'] = 'Bearer '+TOKEN;
-    if (ADMIN_PASS) headers['x-admin-password'] = ADMIN_PASS;
+    if (ADMIN_PASS) {
+      headers['x-admin-password'] = ADMIN_PASS;
+      body.admin_password = ADMIN_PASS;
+    }
     const res = await fetch(`${API_BASE}/${func}${path}`, {
       method: 'POST',
       headers,
