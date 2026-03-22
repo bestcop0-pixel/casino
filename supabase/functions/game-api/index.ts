@@ -732,6 +732,54 @@ async function handleLeaderboard(req: Request) {
   return json({ leaderboard });
 }
 
+// ═══ ROUTE: /game/sync (balance sync after iframe game) ═══
+async function handleGameSync(req: Request) {
+  const user = await getUserByToken(req);
+  if (!user) return err("Unauthorized", 401);
+
+  const { game, total_bet, total_win } = await req.json();
+  if (!game) return err("Missing game name");
+
+  const totalBet = parseFloat(total_bet) || 0;
+  const totalWin = parseFloat(total_win) || 0;
+
+  if (totalBet <= 0 && totalWin <= 0) {
+    return json({ balance: parseFloat(user.balance) });
+  }
+
+  let newBalance = parseFloat(user.balance);
+
+  // Deduct total bets
+  if (totalBet > 0) {
+    const { data: betResult, error: betErr } = await supabase.rpc("change_balance", {
+      p_user_id: user.id, p_delta: -totalBet, p_type: "bet",
+      p_meta: { game, source: "iframe_sync" },
+    });
+    if (betErr) return err("Sync failed: " + betErr.message);
+    if (betResult) newBalance = parseFloat(betResult[0].new_balance);
+  }
+
+  // Credit total wins
+  if (totalWin > 0) {
+    const { data: winResult, error: winErr } = await supabase.rpc("change_balance", {
+      p_user_id: user.id, p_delta: totalWin, p_type: "win",
+      p_meta: { game, source: "iframe_sync" },
+    });
+    if (winErr) return err("Sync failed: " + winErr.message);
+    if (winResult) newBalance = parseFloat(winResult[0].new_balance);
+  }
+
+  // Record game session summary
+  await supabase.from("game_sessions").insert({
+    user_id: user.id, game,
+    bet_amount: totalBet, win_amount: totalWin,
+    result: { type: "iframe_session", net: totalWin - totalBet },
+    server_seed: serverSeed(),
+  });
+
+  return json({ balance: newBalance });
+}
+
 // ═══ MAIN ROUTER ═══
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -748,6 +796,7 @@ serve(async (req: Request) => {
       case path === "/game/roulette": return await handleRoulette(req);
       case path === "/game/blackjack": return await handleBlackjack(req);
       case path === "/game/iframe": return await handleIframe(req);
+      case path === "/game/sync": return await handleGameSync(req);
       case path === "/promo/redeem": return await handlePromo(req);
       case path === "/free-spins": return await handleFreeSpins(req);
       case path === "/leaderboard": return await handleLeaderboard(req);

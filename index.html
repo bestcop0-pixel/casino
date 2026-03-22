@@ -2902,64 +2902,57 @@ async function renderLB(type){
 
 // ═══════ GAME LAUNCHER ═══════
 let _iframeGameName='';
+let _gameStartBal=0;
+let _iframeTotalBet=0;
+let _iframeTotalWin=0;
+
 async function launchGame(url){
-  // Determine game name from URL
   const m=url.match(/games\/([^.?]+)/);
   _iframeGameName=m?m[1]:'slot';
+  _gameStartBal=S.balance;
+  _iframeTotalBet=0;
+  _iframeTotalWin=0;
   const sep=url.includes('?')?'&':'?';
-  const params='bal='+S.balance.toFixed(2)+'&token='+(S.token||'')+'&userId='+(S.userId||'')+'&demo='+(S.isDemo?'1':'0');
-  document.getElementById('gameFrame').src=url+sep+params;
+  document.getElementById('gameFrame').src=url+sep+'bal='+S.balance.toFixed(2);
   document.getElementById('gameOverlay').style.display='block';
   document.getElementById('app').style.display='none';
 }
-function closeGame(){
+
+async function closeGame(){
   document.getElementById('gameOverlay').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('gameFrame').src='';
+
+  // Sync balance with server on game close
+  if(!S.isDemo && S.token && (_iframeTotalBet>0 || _iframeTotalWin>0)){
+    const data=await api('game-api','/game/sync',{
+      game:_iframeGameName,
+      total_bet:_iframeTotalBet,
+      total_win:_iframeTotalWin
+    });
+    // api() auto-updates S.balance from response
+  }
+  _iframeTotalBet=0;
+  _iframeTotalWin=0;
 }
 
-// Track pending iframe sessions for server sync
-let _iframeSessionId=null;
-window.addEventListener('message',async e=>{
+window.addEventListener('message',e=>{
   if(e.data==='back') closeGame();
-  if(e.data&&typeof e.data==='object'&&e.data.type==='slotBet'){
-    // Iframe slot is about to spin — deduct bet on server
-    if(!S.isDemo&&S.token){
-      const bet=parseFloat(e.data.bet)||0;
-      const game=e.data.game||_iframeGameName;
-      const data=await api('game-api','/game/iframe',{action:'get-seed',game:game,bet:bet});
-      if(data){
-        _iframeSessionId=data.session_id;
-        // Send seed to iframe
-        const frame=document.getElementById('gameFrame');
-        if(frame&&frame.contentWindow){
-          frame.contentWindow.postMessage({type:'serverSeed',seed:data.seed,session_id:data.session_id},'*');
-        }
-      }
-    }
-  }
-  if(e.data&&typeof e.data==='object'&&e.data.type==='slotResult'){
-    // Iframe slot finished — report win to server
-    if(!S.isDemo&&S.token){
-      const winAmount=parseFloat(e.data.win)||0;
-      const sid=e.data.session_id||_iframeSessionId;
-      if(sid){
-        await api('game-api','/game/iframe',{action:'report-result',session_id:sid,win_amount:winAmount});
-        _iframeSessionId=null;
-      }
-    }
-  }
   if(e.data&&typeof e.data==='object'&&e.data.type==='balSync'){
     const newBal=parseFloat(e.data.bal);
     if(!isNaN(newBal)&&newBal>=0){
       const delta=newBal-S.balance;
       if(Math.abs(delta)>0.001){
-        // In server mode, trust server balance from api() calls
-        if(S.isDemo){
-          S.balance=newBal;
-          const d=document.getElementById('balDisp');
-          d.textContent=fmt(S.balance);
+        // Track bets and wins separately for server sync
+        if(delta<0){
+          _iframeTotalBet+=Math.abs(delta);
+        } else {
+          _iframeTotalWin+=delta;
         }
+        // Always update displayed balance
+        S.balance=newBal;
+        const d=document.getElementById('balDisp');
+        d.textContent=fmt(S.balance);
         if(delta>0){
           S.transactions.unshift({type:'win',name:'Слот выигрыш',amount:Math.abs(delta),date:'Только что',plus:true});
         }
