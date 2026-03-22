@@ -350,8 +350,8 @@ function clusterPay(symIdx, count, betAmt) {
 }
 
 /* Symbol weights */
-const WEIGHTS =      [18, 18, 18, 12, 10, 8, 5, 3, 4, 4];
-const WEIGHTS_ANTE = [16, 16, 16, 11, 9, 7, 5, 3, 4, 13];
+const WEIGHTS =      [22, 22, 22, 10, 8, 6, 4, 2, 2, 2];
+const WEIGHTS_ANTE = [20, 20, 20, 9, 7, 5, 4, 2, 2, 11];
 
 function rndSym() {
   let w = anteOn ? WEIGHTS_ANTE : WEIGHTS;
@@ -818,11 +818,11 @@ function formatVal(v) {
 }
 
 /* HS bonus symbol generation */
-const HS_LAND_CHANCE = 0.32;
+const HS_LAND_CHANCE = 0.18;
 const HS_ADDER_VALS =    [1,  2,  5,  10, 15, 30, 50, 75, 100];
-const HS_ADDER_WEIGHTS = [30, 25, 15, 10, 7,  5,  4,  2,  2];
+const HS_ADDER_WEIGHTS = [35, 28, 15, 8,  5,  4,  2,  1.5, 1.5];
 const HS_MULT_VALS =    [2,  3,  5,  10, 20, 50, 100];
-const HS_MULT_WEIGHTS = [30, 25, 15, 10, 8,  7,  5];
+const HS_MULT_WEIGHTS = [35, 25, 17, 10, 6,  4,  3];
 
 function weightedPick(vals, weights) {
   let total = 0;
@@ -846,7 +846,7 @@ window.hsDoSpin = async function() {
       if (hsGridData[r][c] !== null) continue;
       if (Math.random() < HS_LAND_CHANCE) {
         landed = true;
-        let isGlobal = Math.random() < 0.07;
+        let isGlobal = Math.random() < 0.03;
         let isMult = Math.random() < 0.30;
         let type = isMult ? 'mult' : 'adder';
         let value;
