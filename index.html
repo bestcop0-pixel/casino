@@ -1974,6 +1974,7 @@ function filterCat(cat,btn){
 // CRASH
 // ═══════════════════
 let crashState='idle', crashMult=1, crashTarget=1, crashInterval=null, crashBetAmt=0, crashHistory=[], crashPoints=[];
+let crashSessionId=null;
 
 function setCrashBet(f){
   const inp=document.getElementById('crashBetInput');
@@ -1982,26 +1983,44 @@ function setCrashBet(f){
   inp.value=Math.max(1,v);
 }
 
-function genCrashTarget(){
-  if(Math.random()<0.05) return 1+Math.random()*0.5;
-  return Math.min(-Math.log(Math.random())*1.5+1, 100);
-}
-
-function crashBet(){
+async function crashBet(){
   if(crashState!=='idle') return;
   const amt=parseFloat(document.getElementById('crashBetInput').value);
   if(!amt||amt<1){showToast('Введите ставку');return;}
   if(amt>S.balance){showToast('Недостаточно средств!');return;}
-  crashBetAmt=amt;
-  updateBal(-amt,null);
-  S.totalGames++;
-  crashTarget=genCrashTarget();
-  crashState='flying';
-  crashMult=1;
-  crashPoints=[[0,0]];
+
+  // Demo mode — local
+  if(S.isDemo){
+    crashBetAmt=amt;
+    updateBal(-amt,null);
+    S.totalGames++;
+    const h=Math.random();
+    crashTarget=h<0.05?(1+h*10):Math.min(1/(1-h)*0.96,100);
+    crashTarget=parseFloat(crashTarget.toFixed(2));
+    crashState='flying'; crashMult=1; crashPoints=[[0,0]];
+    document.getElementById('crashBetBtn').disabled=true;
+    document.getElementById('crashCashBtn').disabled=false;
+    document.getElementById('crashStatus').textContent='Заберите до краха!';
+    document.getElementById('crashMult').className='crash-mult-display';
+    drawCrash();
+    crashInterval=setInterval(crashTick,100);
+    return;
+  }
+
+  // Server mode — bet on server, animate locally
   document.getElementById('crashBetBtn').disabled=true;
+  const data=await api('game-api','/game/crash',{action:'bet',amount:amt});
+  if(!data){document.getElementById('crashBetBtn').disabled=false;return;}
+  crashBetAmt=amt;
+  crashSessionId=data.session_id;
+  // Local crash target for animation (server validates cashout independently)
+  const h=Math.random();
+  crashTarget=h<0.05?(1+h*10):Math.min(1/(1-h)*0.96,100);
+  crashTarget=parseFloat(crashTarget.toFixed(2));
+  S.totalGames++;
+  crashState='flying'; crashMult=1; crashPoints=[[0,0]];
   document.getElementById('crashCashBtn').disabled=false;
-  document.getElementById('crashStatus').textContent='Заберите до краша!';
+  document.getElementById('crashStatus').textContent='Заберите до краха!';
   document.getElementById('crashMult').className='crash-mult-display';
   drawCrash();
   crashInterval=setInterval(crashTick,100);
@@ -2023,26 +2042,47 @@ function crashTick(){
 let crashCashedMult=0;
 const FAKE_NAMES=['Артём','Максим','Даниил','Иван','Кирилл','Александр','Дмитрий','Никита','Егор','Андрей','Алексей','Михаил','Владислав','Матвей','Тимофей'];
 
-function crashCashOut(){
+async function crashCashOut(){
   if(crashState!=='flying') return;
-  // Credit the win immediately
   crashCashedMult=crashMult;
-  const win=parseFloat((crashBetAmt*crashCashedMult).toFixed(2));
-  updateBal(win,`Crash ×${crashCashedMult.toFixed(2)}`,'win');
-  recordWin(win-crashBetAmt);
-  showToast(`Забрали +${fmt(win)} на ×${crashCashedMult.toFixed(2)}`);
-  spawnConfetti(25);
-  crashHistory.unshift({m:crashCashedMult.toFixed(2),w:true});
-  document.getElementById('crashStatus').textContent=`Вы забрали на ×${crashCashedMult.toFixed(2)}`;
-  document.getElementById('crashMult').style.color='var(--green)';
-  // Disable cashout but keep multiplier running
-  crashState='watching';
   document.getElementById('crashCashBtn').disabled=true;
+
+  if(S.isDemo){
+    const win=parseFloat((crashBetAmt*crashCashedMult).toFixed(2));
+    updateBal(win,`Crash ×${crashCashedMult.toFixed(2)}`,'win');
+    recordWin(win-crashBetAmt);
+    showToast(`Забрали +${fmt(win)} на ×${crashCashedMult.toFixed(2)}`);
+    spawnConfetti(25);
+    crashHistory.unshift({m:crashCashedMult.toFixed(2),w:true});
+    document.getElementById('crashStatus').textContent=`Вы забрали на ×${crashCashedMult.toFixed(2)}`;
+    document.getElementById('crashMult').style.color='var(--green)';
+    crashState='watching';
+    return;
+  }
+
+  // Server cashout
+  const data=await api('game-api','/game/crash',{action:'cashout',session_id:crashSessionId,current_mult:parseFloat(crashCashedMult.toFixed(2))});
+  if(data&&data.win){
+    const win=data.win;
+    recordWin(win-crashBetAmt);
+    showToast(`Забрали +${fmt(win)} на ×${crashCashedMult.toFixed(2)}`);
+    spawnConfetti(25);
+    crashHistory.unshift({m:crashCashedMult.toFixed(2),w:true});
+    document.getElementById('crashStatus').textContent=`Вы забрали на ×${crashCashedMult.toFixed(2)}`;
+    document.getElementById('crashMult').style.color='var(--green)';
+  } else {
+    showToast('Не удалось забрать — уже крах!');
+  }
+  crashState='watching';
 }
 
 function crashEnd(cashed){
   clearInterval(crashInterval);
   const finalMult=crashMult;
+  // Server resolve (fire-and-forget for loss)
+  if(!S.isDemo&&crashSessionId&&crashState!=='watching'){
+    api('game-api','/game/crash',{action:'resolve',session_id:crashSessionId});
+  }
   if(crashState==='watching'){
     // User already cashed out — show what they missed (FOMO)
     crashState='idle';
@@ -2423,27 +2463,39 @@ function clearRL(){
   document.getElementById('rlResultMsg').innerHTML='';
 }
 
-function spinRoulette(){
+async function spinRoulette(){
   if(rlSpinning) return;
   if(!rlBet.type){showToast('Выберите тип ставки!');return;}
   if(S.balance<rlBet.amount){showToast('Недостаточно средств!');return;}
   S.totalGames++;
-  updateBal(-rlBet.amount,null);
+
+  let resultIdx, result;
+
+  if(S.isDemo){
+    updateBal(-rlBet.amount,null);
+    resultIdx=Math.floor(Math.random()*37);
+    result=RL_NUMS[resultIdx];
+  } else {
+    // Server call
+    const data=await api('game-api','/game/roulette',{betType:rlBet.type,betAmount:rlBet.amount});
+    if(!data) return;
+    resultIdx=data.resultIdx;
+    result=data.number;
+    // Balance already synced by api() wrapper
+    // Store server result for resolveRL
+    window._rlServerData=data;
+  }
+
   stopIdleSpin();
   rlSpinning=true;
-  // Pick result and compute target wheel angle
-  const resultIdx=Math.floor(Math.random()*37);
-  const result=RL_NUMS[resultIdx];
   const segDeg=360/37;
   const pocketCenter=resultIdx*segDeg + segDeg/2;
   const currentMod=((wheelAngle%360)+360)%360;
   let extraRot=(360-pocketCenter-currentMod+360*5)%360;
   if(extraRot<30) extraRot+=360;
-  // Store spin state — render loop animates from here
   _sStart=performance.now(); _sDur=4400;
   _sFromA=wheelAngle; _sToA=wheelAngle+1440+extraRot;
   _sResult=result; _sResolved=false;
-  // Launch ball
   _bOn=true; _bA=Math.random()*Math.PI*2; _bR=_bTrackR; _bSpeed=0.20;
 }
 
@@ -2452,6 +2504,26 @@ function resolveRL(num){
   const color=num===0?'green':(isRed?'red':'black');
   const ne=document.getElementById('rlResultNum');
   ne.textContent=num; ne.className='rl-result-num '+color;
+  const me=document.getElementById('rlResultMsg');
+
+  if(!S.isDemo && window._rlServerData){
+    // Use server-calculated result
+    const sd=window._rlServerData;
+    const payout=sd.win||0;
+    if(payout>0){
+      recordWin(payout-rlBet.amount);
+      me.innerHTML=`<span style="background:var(--green-dim);color:var(--green);border:1px solid rgba(0,230,118,0.2);padding:4px 12px;border-radius:50px;font-weight:800;font-size:13px;">+${fmt(payout)}</span>`;
+      showToast(`${num} — Выигрыш ${fmt(payout)}!`);
+      spawnConfetti(30);
+    }else{
+      me.innerHTML=`<span style="background:var(--red-dim);color:var(--red);border:1px solid rgba(255,71,87,0.2);padding:4px 12px;border-radius:50px;font-weight:800;font-size:13px;">ПРОИГРЫШ</span>`;
+      showToast(`${num} ${color} — повезёт в следующий раз!`);
+    }
+    window._rlServerData=null;
+    return;
+  }
+
+  // Demo mode — local calculation
   let win=false, payout=0;
   const t=rlBet.type;
   if(t==='red'&&isRed){win=true;payout=rlBet.amount*2;}
@@ -2461,7 +2533,6 @@ function resolveRL(num){
   else if(t==='low'&&num>=1&&num<=18){win=true;payout=rlBet.amount*2;}
   else if(t==='high'&&num>=19&&num<=36){win=true;payout=rlBet.amount*2;}
   else if(t==='green'&&num===0){win=true;payout=rlBet.amount*14;}
-  const me=document.getElementById('rlResultMsg');
   if(win){
     updateBal(payout,'Рулетка','win');
     recordWin(payout-rlBet.amount);
@@ -2491,7 +2562,7 @@ function buildDeck(){
   for(let s of SUITS) for(let v of VALS) deck.push({s,v});
   for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
 }
-function draw(){ if(deck.length<10) shuffleDeck(); return deck.pop(); }
+function draw(){ if(deck.length<10) buildDeck(); return deck.pop(); }
 function cVal(c){ if(['J','Q','K'].includes(c.v)) return 10; if(c.v==='A') return 11; return parseInt(c.v); }
 function hTotal(h){
   let t=h.reduce((s,c)=>s+cVal(c),0), a=h.filter(c=>c.v==='A').length;
@@ -2513,41 +2584,116 @@ function renderBJ(hide=false){
   document.getElementById('playerScore').textContent=hTotal(pHand);
   document.getElementById('dealerScore').textContent=hide?'?':hTotal(dHand);
 }
-function bjDeal(){
+let bjSessionId=null;
+function parseCard(str){ const s=str.slice(-1); const v=str.slice(0,-1); return {s,v}; }
+
+async function bjDeal(){
   if(S.balance<bjBet){showToast('Недостаточно средств!');return;}
   S.totalGames++;
-  updateBal(-bjBet,null);
-  buildDeck();
-  pHand=[draw(),draw()]; dHand=[draw(),draw()];
-  bjActive=true;
+
   document.getElementById('bjDealBtn').disabled=true;
-  document.getElementById('bjHitBtn').disabled=false;
-  document.getElementById('bjStandBtn').disabled=false;
   document.getElementById('bjMsg').textContent='';
   document.getElementById('bjMsg').className='bj-msg';
+
+  if(S.isDemo){
+    updateBal(-bjBet,null);
+    buildDeck();
+    pHand=[draw(),draw()]; dHand=[draw(),draw()];
+    bjActive=true; bjSessionId=null;
+    document.getElementById('bjHitBtn').disabled=false;
+    document.getElementById('bjStandBtn').disabled=false;
+    renderBJ(true);
+    if(hTotal(pHand)===21) setTimeout(bjStand,800);
+    return;
+  }
+
+  // Server deal
+  const data=await api('game-api','/game/blackjack',{action:'deal',bet:bjBet});
+  if(!data){document.getElementById('bjDealBtn').disabled=false;return;}
+  bjSessionId=data.session_id;
+  pHand=data.playerCards.map(parseCard);
+  dHand=[parseCard(data.dealerUpCard),{s:'?',v:'?'}]; // hide second card
+  bjActive=true;
+  document.getElementById('bjHitBtn').disabled=false;
+  document.getElementById('bjStandBtn').disabled=false;
   renderBJ(true);
-  if(hTotal(pHand)===21) setTimeout(bjStand,800);
+  if(data.playerTotal===21) setTimeout(bjStand,800);
 }
-function bjHit(){
+
+async function bjHit(){
   if(!bjActive) return;
-  pHand.push(draw());
+
+  if(S.isDemo){
+    pHand.push(draw());
+    renderBJ(true);
+    if(hTotal(pHand)>21) bjEnd('bust');
+    else if(hTotal(pHand)===21) bjStand();
+    return;
+  }
+
+  // Server hit
+  document.getElementById('bjHitBtn').disabled=true;
+  const data=await api('game-api','/game/blackjack',{action:'hit',session_id:bjSessionId});
+  document.getElementById('bjHitBtn').disabled=false;
+  if(!data) return;
+  pHand.push(parseCard(data.card));
   renderBJ(true);
-  if(hTotal(pHand)>21) bjEnd('bust');
-  else if(hTotal(pHand)===21) bjStand();
+  if(data.bust){
+    bjActive=false;
+    document.getElementById('bjHitBtn').disabled=true;
+    document.getElementById('bjStandBtn').disabled=true;
+    document.getElementById('bjDealBtn').disabled=false;
+    const me=document.getElementById('bjMsg');
+    me.textContent='💥 Перебор!'; me.className='bj-msg lose';
+    showToast('Дилер выигрывает. Попробуйте ещё!');
+    return;
+  }
+  if(data.playerTotal===21) bjStand();
 }
-function bjStand(){
+
+async function bjStand(){
   if(!bjActive&&pHand.length===0) return;
   bjActive=false;
   document.getElementById('bjHitBtn').disabled=true;
   document.getElementById('bjStandBtn').disabled=true;
-  function dp(){
+
+  if(S.isDemo){
+    function dp(){
+      renderBJ(false);
+      if(hTotal(dHand)<17){ dHand.push(draw()); setTimeout(dp,500); }
+      else bjEnd('stand');
+    }
     renderBJ(false);
-    if(hTotal(dHand)<17){ dHand.push(draw()); setTimeout(dp,500); }
-    else bjEnd('stand');
+    setTimeout(dp,400);
+    return;
   }
+
+  // Server stand
+  const data=await api('game-api','/game/blackjack',{action:'stand',session_id:bjSessionId});
+  if(!data){document.getElementById('bjDealBtn').disabled=false;return;}
+
+  // Reveal dealer cards with animation
+  dHand=data.dealerCards.map(parseCard);
+  document.getElementById('bjDealBtn').disabled=false;
   renderBJ(false);
-  setTimeout(dp,400);
+
+  const me=document.getElementById('bjMsg');
+  const msgs={win:'🎉 Вы выиграли!',blackjack:'🎉 Блэкджек!',bust:'💥 Перебор!',lose:'😔 Дилер выиграл',push:'🤝 Ничья!'};
+  const cls={win:'win',blackjack:'win',bust:'lose',lose:'lose',push:'push'};
+  const out=data.outcome;
+  me.textContent=msgs[out]||msgs.lose; me.className='bj-msg '+(cls[out]||'lose');
+
+  if(out==='win'||out==='blackjack'){
+    recordWin(data.win-bjBet);
+    showToast(`Выигрыш ${fmt(data.win)}!`);
+    spawnConfetti(30);
+  }else if(out==='push'){
+    showToast('Ничья — ставка возвращена!');
+  }else{
+    showToast('Дилер выигрывает. Попробуйте ещё!');
+  }
 }
+
 function bjEnd(reason){
   bjActive=false;
   document.getElementById('bjHitBtn').disabled=true;
@@ -2755,9 +2901,14 @@ async function renderLB(type){
 }
 
 // ═══════ GAME LAUNCHER ═══════
+let _iframeGameName='';
 async function launchGame(url){
+  // Determine game name from URL
+  const m=url.match(/games\/([^.?]+)/);
+  _iframeGameName=m?m[1]:'slot';
   const sep=url.includes('?')?'&':'?';
-  document.getElementById('gameFrame').src=url+sep+'bal='+S.balance.toFixed(2);
+  const params='bal='+S.balance.toFixed(2)+'&token='+(S.token||'')+'&userId='+(S.userId||'')+'&demo='+(S.isDemo?'1':'0');
+  document.getElementById('gameFrame').src=url+sep+params;
   document.getElementById('gameOverlay').style.display='block';
   document.getElementById('app').style.display='none';
 }
@@ -2766,16 +2917,49 @@ function closeGame(){
   document.getElementById('app').style.display='flex';
   document.getElementById('gameFrame').src='';
 }
-window.addEventListener('message',e=>{
+
+// Track pending iframe sessions for server sync
+let _iframeSessionId=null;
+window.addEventListener('message',async e=>{
   if(e.data==='back') closeGame();
+  if(e.data&&typeof e.data==='object'&&e.data.type==='slotBet'){
+    // Iframe slot is about to spin — deduct bet on server
+    if(!S.isDemo&&S.token){
+      const bet=parseFloat(e.data.bet)||0;
+      const game=e.data.game||_iframeGameName;
+      const data=await api('game-api','/game/iframe',{action:'get-seed',game:game,bet:bet});
+      if(data){
+        _iframeSessionId=data.session_id;
+        // Send seed to iframe
+        const frame=document.getElementById('gameFrame');
+        if(frame&&frame.contentWindow){
+          frame.contentWindow.postMessage({type:'serverSeed',seed:data.seed,session_id:data.session_id},'*');
+        }
+      }
+    }
+  }
+  if(e.data&&typeof e.data==='object'&&e.data.type==='slotResult'){
+    // Iframe slot finished — report win to server
+    if(!S.isDemo&&S.token){
+      const winAmount=parseFloat(e.data.win)||0;
+      const sid=e.data.session_id||_iframeSessionId;
+      if(sid){
+        await api('game-api','/game/iframe',{action:'report-result',session_id:sid,win_amount:winAmount});
+        _iframeSessionId=null;
+      }
+    }
+  }
   if(e.data&&typeof e.data==='object'&&e.data.type==='balSync'){
     const newBal=parseFloat(e.data.bal);
     if(!isNaN(newBal)&&newBal>=0){
       const delta=newBal-S.balance;
       if(Math.abs(delta)>0.001){
-        S.balance=newBal;
-        const d=document.getElementById('balDisp');
-        d.textContent=fmt(S.balance);
+        // In server mode, trust server balance from api() calls
+        if(S.isDemo){
+          S.balance=newBal;
+          const d=document.getElementById('balDisp');
+          d.textContent=fmt(S.balance);
+        }
         if(delta>0){
           S.transactions.unshift({type:'win',name:'Слот выигрыш',amount:Math.abs(delta),date:'Только что',plus:true});
         }
