@@ -1712,7 +1712,8 @@ async function api(func, path, body={}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': S.token ? 'Bearer '+S.token : '',
+        'Authorization': S.token ? 'Bearer '+S.token : 'Bearer '+SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY,
       },
       body: JSON.stringify(body),
     });
@@ -1778,7 +1779,11 @@ async function bootAuth() {
   try {
     const res = await fetch(`${API_BASE}/game-api/auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY,
+      },
       body: JSON.stringify({ initData }),
     });
     data = await res.json();
