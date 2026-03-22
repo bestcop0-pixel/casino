@@ -1444,7 +1444,7 @@ html, body {
         <div class="crash-history" id="crashHistEl"></div>
         <div style="display:flex;flex-direction:column;gap:8px;width:100%">
           <div class="crash-input-label">Сумма ставки</div>
-          <input type="number" class="crash-input" id="crashBetInput" value="5" min="0.1" step="0.1">
+          <input type="number" class="crash-input" id="crashBetInput" value="5" min="1" step="0.1">
           <div class="quick-bets">
             <button class="quick-bet" onclick="setCrashBet(0.5)">½</button>
             <button class="quick-bet" onclick="setCrashBet(2)">2×</button>
@@ -2399,11 +2399,13 @@ function _drawRLC(){
 }
 
 function selRL(type,btn){
+  if(rlSpinning) return;
   rlBet.type=type;
   document.querySelectorAll('.rl-bet-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
 }
 function selBetR(a,btn){
+  if(rlSpinning) return;
   rlBet.amount=a;
   document.querySelectorAll('#screen-roulette .rl-chip').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
@@ -2484,7 +2486,7 @@ function buildDeck(){
   for(let s of SUITS) for(let v of VALS) deck.push({s,v});
   for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
 }
-function draw(){ return deck.pop(); }
+function draw(){ if(deck.length<10) shuffleDeck(); return deck.pop(); }
 function cVal(c){ if(['J','Q','K'].includes(c.v)) return 10; if(c.v==='A') return 11; return parseInt(c.v); }
 function hTotal(h){
   let t=h.reduce((s,c)=>s+cVal(c),0), a=h.filter(c=>c.v==='A').length;
@@ -2519,7 +2521,7 @@ function bjDeal(){
   document.getElementById('bjMsg').textContent='';
   document.getElementById('bjMsg').className='bj-msg';
   renderBJ(true);
-  if(hTotal(pHand)===21) bjStand();
+  if(hTotal(pHand)===21) setTimeout(bjStand,800);
 }
 function bjHit(){
   if(!bjActive) return;
@@ -2651,7 +2653,7 @@ async function confirmWithdraw(){
     S.balance = data.balance;
     document.getElementById('balDisp').textContent = fmt(S.balance);
     showToast(`${fmt(amount)} USDT отправлено на ваш кошелёк`);
-    updateBal(0, 'Вывод USDT', 'dep');
+    S.transactions.unshift({ type:'withdraw', name:'Вывод USDT', amount:amount, date:'Только что', plus:false });
     if(curScreen==='wallet') updateWallet();
   }
 }

@@ -1345,8 +1345,8 @@ function hideWP(){document.getElementById('wPop').className='wp'}
 
 // ═══ EVENT HANDLERS ═══
 document.getElementById('spB').addEventListener('click',startSpin);
-document.getElementById('bM').addEventListener('click',()=>{if(state!=='IDLE')return;sndClick();bIdx=Math.max(0,bIdx-1);bet=BETS[bIdx];updBet()});
-document.getElementById('bP').addEventListener('click',()=>{if(state!=='IDLE')return;sndClick();bIdx=Math.min(BETS.length-1,bIdx+1);bet=BETS[bIdx];updBet()});
+document.getElementById('bM').addEventListener('click',()=>{if(state!=='IDLE'||fsLeft>0)return;sndClick();bIdx=Math.max(0,bIdx-1);bet=BETS[bIdx];updBet()});
+document.getElementById('bP').addEventListener('click',()=>{if(state!=='IDLE'||fsLeft>0)return;sndClick();bIdx=Math.min(BETS.length-1,bIdx+1);bet=BETS[bIdx];updBet()});
 document.getElementById('tbB').addEventListener('click',function(){sndClick();turbo=!turbo;this.classList.toggle('ac',turbo)});
 document.getElementById('auB').addEventListener('click',function(){sndClick();autoP=!autoP;this.classList.toggle('ac',autoP);if(autoP&&state==='IDLE')startSpin()});
 document.getElementById('anS').addEventListener('click',function(){sndClick();ante=!ante;this.classList.toggle('on',ante)});
