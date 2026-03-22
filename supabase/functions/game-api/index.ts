@@ -766,7 +766,7 @@ const WEBAPP_URL = "https://bestcop0-pixel.github.io/casino/";
 async function tgApi(method: string, body: Record<string, unknown> = {}) {
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(body),
   });
   return res.json();
@@ -856,7 +856,7 @@ async function handleBotWebhook(req: Request) {
         parse_mode: "Markdown",
         reply_markup: {
           keyboard: [[
-            { text: "📱 Поделиться номером", request_contact: true }
+            { text: "\u041f\u043e\u0434\u0435\u043b\u0438\u0442\u044c\u0441\u044f \u043d\u043e\u043c\u0435\u0440\u043e\u043c", request_contact: true }
           ]],
           resize_keyboard: true,
           one_time_keyboard: true,
@@ -894,7 +894,7 @@ async function handleBotWebhook(req: Request) {
       text: `📱 Для доступа к Sphere поделитесь номером телефона 👇`,
       reply_markup: {
         keyboard: [[
-          { text: "📱 Поделиться номером", request_contact: true }
+          { text: "\u041f\u043e\u0434\u0435\u043b\u0438\u0442\u044c\u0441\u044f \u043d\u043e\u043c\u0435\u0440\u043e\u043c", request_contact: true }
         ]],
         resize_keyboard: true,
         one_time_keyboard: true,
