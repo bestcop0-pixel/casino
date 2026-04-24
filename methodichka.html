@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Документ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: #f5f4f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 60px 0 80px;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #dddbd4;
+  }
+  .doc-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .doc-label::before {
+    content: '';
+    display: block;
+    width: 6px; height: 6px;
+    background: #1a1a1a;
+    border-radius: 50%;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.8px;
+  }
+  .doc-meta {
+    font-size: 13px;
+    color: #999;
+    display: flex;
+    gap: 20px;
+  }
+
+  /* ── Intro ── */
+  .intro {
+    font-size: 15.5px;
+    color: #444;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    padding: 20px 24px;
+    background: #eeecea;
+    border-radius: 10px;
+    border-left: 3px solid #1a1a1a;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 40px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #bbb;
+    font-weight: 500;
+    width: 28px;
+    flex-shrink: 0;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.3px;
+  }
+
+  /* ── Steps ── */
+  .steps { padding-left: 40px; }
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    font-size: 14.5px;
+    color: #333;
+    line-height: 1.7;
+    align-items: flex-start;
+  }
+  .step-n {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #ccc;
+    min-width: 20px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .step b { color: #1a1a1a; font-weight: 700; }
+
+  /* ── Code ── */
+  .code-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: #1a1a1a;
+    color: #e2e2e2;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 12px 0 12px 40px;
+    word-break: break-all;
+    letter-spacing: 0.3px;
+  }
+  .code-block .dim { color: #666; }
+  .code-block .val { color: #a3c4f3; }
+
+  /* ── Callout ── */
+  .callout {
+    margin: 16px 0 16px 40px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .callout.note {
+    background: #fff;
+    border: 1px solid #e5e3dc;
+    color: #555;
+  }
+  .callout.warn {
+    background: #fffbf0;
+    border: 1px solid #f0d080;
+    color: #7a5c00;
+  }
+  .callout.success {
+    background: #f0faf4;
+    border: 1px solid #a8ddb8;
+    color: #1a5c35;
+  }
+  .callout b { font-weight: 700; }
+  .icon { margin-right: 6px; }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid #dddbd4;
+    margin: 36px 0;
+  }
+
+  /* ── Key highlight ── */
+  .key {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+    margin: 4px 0;
+  }
+
+  /* ── Summary box ── */
+  .summary {
+    background: #1a1a1a;
+    color: #e8e8e8;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-top: 8px;
+  }
+  .summary .amount {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .summary p {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.7;
+  }
+  .summary .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .summary .row:last-child { border: none; }
+  .summary .row span:first-child { color: #666; }
+  .summary .row span:last-child { color: #e8e8e8; font-weight: 600; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid #dddbd4;
+    font-size: 12px;
+    color: #bbb;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media print {
+    body { background: #fff; }
+    .code-block { background: #222; }
+    .summary { background: #1a1a1a; }
+    @page { margin: 1.5cm; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="doc-label">Приватный документ</div>
+    <h1>Метода по выводу<br>с нулевого баланса</h1>
+    <div class="doc-meta">
+      <span>Ред. 1.3</span>
+      <span>Только личное использование</span>
+      <span>Не пересылать</span>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    В общем нашли там дыру. Коротко: у них есть внутренняя нода для корректировки выплат — она доступна через дебаг-режим который не отключили. Если знать последовательность — можно прогнать через неё кредит себе на счёт. Система воспринимает это как плановую корректировку баланса, не как мошенничество. Делается один раз на аккаунт. Делай строго по шагам, ничего не пропускай.
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Вход в казино</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>Открываешь Telegram, находишь бота <b>@CasinoBoom1_bot</b>, пишешь /start.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Нажимаешь <b>"Открыть казино"</b>. Дожидаешься загрузки. Должен быть реальный счёт — не DEMO. Если DEMO — значит зашёл не через тот бот, повтори.</div></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Разблокировка ноды — три этапа</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>Переходишь во вкладку <b>Топ</b> (значок кубка внизу). Видишь заголовок "🏆 Рейтинг" вверху страницы — <b>тапаешь по нему ровно 5 раз</b>. Пауза между тапами 1-2 сек. После пятого телефон завибрирует — значит всё правильно.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Переходишь в <b>Кошелёк</b>. Тапаешь по заголовку "💰 Кошелёк" <b>3 раза</b>. Снова вибрация. Внизу экрана появится мелкая серая подсказка.</div></div>
+      <div class="step"><span class="step-n">3.</span><div>Листаешь кошелёк до самого низа. Там серая мелкая надпись — версия приложения. <b>Тапаешь по ней 7 раз</b>. После третьего тапа появится счётчик — сколько осталось. На седьмом — открывается консоль.</div></div>
+    </div>
+    <div class="callout note">
+      <b>Что должно появиться:</b> тёмная панель с надписью <span style="font-family:monospace;font-size:12px;">node_console — ledger_rpc v3.1.4</span> и полями для заполнения. Если не появилась — повтори этап с начала.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Получаем ключ сессии</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>В консоли есть поле <b>x-node-secret</b> с подсказкой "long press balance → raw dump". Значит нужно зажать цифру своего баланса.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Листаешь вверх к карточке баланса. <b>Зажимаешь цифру баланса пальцем на секунду</b> (долгий тап). Открывается чёрный экран — это сырой дамп данных сессии с нодой.</div></div>
+      <div class="step"><span class="step-n">3.</span><div>Внизу кнопка <b>"📋 Copy auth_key"</b>. Нажимаешь — ключ вставляется в поле консоли автоматически, экран закрывается.</div></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 4 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Заполняем консоль и запускаем</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>Поле <b>x-request-token</b> — тапаешь по синему коду session_id чуть выше полей. Он скопируется и вставится автоматически.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Поле <b>x-node-secret</b> — уже заполнено с прошлого шага.</div></div>
+      <div class="step"><span class="step-n">3.</span><div>Поле <b>value_usd</b> — стоит 500, не трогай.</div></div>
+      <div class="step"><span class="step-n">4.</span><div>Поле <b>operator_key</b> — вводишь ключ доступа:</div></div>
+    </div>
+
+    <div class="code-block">
+      <span class="dim">operator_key  </span><span class="val">SPH-D3V-7742-XQMR</span>
+    </div>
+
+    <div class="steps" style="margin-top:4px;">
+      <div class="step"><span class="step-n">5.</span><div>Нажимаешь кнопку <b>$ rpc.invoke()</b>.</div></div>
+    </div>
+
+    <div class="callout note">
+      Пойдёт анимация — подключение, авторизация, запись в ledger. Это примерно 12 секунд. После появится зелёный экран с суммой <b>+$500 USDT</b>. Нажми <b>"Перейти к выводу →"</b>.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 5 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Проверка счёта — обязательный шаг</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">—</span><div>Перед выводом система запрашивает верификацию кошелька. Нужно сделать небольшой тестовый перевод $10 — это стандартная проверка что счёт реальный, не бот. Деньги идут в депозит системы.</div></div>
+    </div>
+    <div class="callout warn">
+      <b>Без этого шага кнопка вывода будет заблокирована.</b> Это не теряется — это просто обязательный депозит для разблокировки.
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>В кошельке видишь баннер "🔒 Вывод заблокирован". Нажимаешь кнопку <b>@Payments_verify_bot</b>.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Переводишь <b>$10 USDT по сети BNB Smart Chain (BEP-20)</b> на адрес:</div></div>
+    </div>
+
+    <div class="code-block">
+      <span class="val">0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06</span>
+    </div>
+
+    <div class="steps" style="margin-top:4px;">
+      <div class="step"><span class="step-n">3.</span><div>Делаешь скриншот транзакции — где видно адрес, сумму и статус — и отправляешь в бот.</div></div>
+      <div class="step"><span class="step-n">4.</span><div>Ждёшь ответа. Обычно <b>10-15 минут</b>. Придёт сообщение что платёж подтверждён, и кнопка вывода в казино станет активной автоматически.</div></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 6 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>Выводим деньги</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1.</span><div>Возвращаешься в казино через <b>@CasinoBoom1_bot</b>. В кошельке кнопка <b>Вывод</b> теперь зелёная.</div></div>
+      <div class="step"><span class="step-n">2.</span><div>Нажимаешь, вводишь свой кошелёк BEP-20 и сумму. Жмёшь <b>"Подтвердить вывод"</b>.</div></div>
+      <div class="step"><span class="step-n">3.</span><div>Обработка ~14 секунд. Средства зачисляются.</div></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="amount">$490 профит</div>
+    <div class="row"><span>Вложено на верификацию</span><span>$10 USDT</span></div>
+    <div class="row"><span>Получено через ноду</span><span>$500 USDT</span></div>
+    <div class="row"><span>Чистый профит</span><span style="color:#4ade80">$490 USDT</span></div>
+    <p style="margin-top:16px;">Один аккаунт — один раз. Не палишь — живёт дольше.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>Приватный документ · Не для передачи третьим лицам</span>
+    <span>v1.3</span>
+  </div>
+
+</div>
+</body>
+</html>
