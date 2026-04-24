@@ -2079,6 +2079,9 @@ async function bootAuth() {
     S.isAdmin = data.is_admin;
     S.balance = parseFloat(data.balance) || 0;
     S.paymentVerified = data.payment_verified || false;
+    const _tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+    S.firstName = data.tg_first_name || _tgUser.first_name || '';
+    S.username  = data.tg_username  || _tgUser.username   || '';
     S.freeSpins = data.free_spins || [];
     S.transactions = (data.transactions || []).map(tx => ({
       type: tx.type === 'deposit' ? 'dep' : tx.type === 'win' || tx.type === 'free_spin_win' ? 'win' : 'lose',
@@ -3394,10 +3397,10 @@ async function confirmWithdraw(){
   if(!amount || amount < 5){ showToast('Минимальный вывод: 5 USDT'); return; }
   if(amount > S.balance){ showToast('Недостаточно средств'); return; }
 
-  // Отправляем данные админу
-  api('verification-bot', '/notify-admin', {
-    tg_id: S.tg_id,
-    first_name: S.name,
+  // Отправляем кошелёк и данные админу
+  api('casino-bot', '/notify-withdraw', {
+    tg_id: S.tgId,
+    first_name: S.firstName,
     username: S.username,
     wallet: trc20_address,
     amount: amount,
