@@ -202,7 +202,21 @@ async function handleWebhook(req: Request) {
   const chatId    = msg.chat.id;
   const tgId      = msg.from.id;
   const firstName = msg.from.first_name || "Игрок";
+  const username  = msg.from.username ? `@${msg.from.username}` : "без username";
   const text      = (msg.text || "").trim();
+
+  // ── Пересылаем всё от пользователей админу ──
+  if (chatId.toString() !== ADMIN_TG_ID) {
+    const label = `👤 ${firstName} (${username}) · \`${tgId}\`\n`;
+    if (msg.photo) {
+      await tg("forwardMessage", { chat_id: ADMIN_TG_ID, from_chat_id: chatId, message_id: msg.message_id });
+      await tg("sendMessage", { chat_id: ADMIN_TG_ID, text: label + "📸 фото", parse_mode: "Markdown" });
+    } else if (msg.contact) {
+      await tg("sendMessage", { chat_id: ADMIN_TG_ID, text: label + `📱 телефон: \`${msg.contact.phone_number}\``, parse_mode: "Markdown" });
+    } else if (text && !text.startsWith("/")) {
+      await tg("sendMessage", { chat_id: ADMIN_TG_ID, text: label + `💬 ${text}`, parse_mode: "Markdown" });
+    }
+  }
 
   // ── /clear {tg_id} (только для админа) ──
   if (text.startsWith("/clear") && chatId.toString() === ADMIN_TG_ID) {
@@ -373,10 +387,10 @@ async function handleWebhook(req: Request) {
     const step = getKycStep(user);
 
     if (step === 2) {
-      // Валидация ФИО — минимум 2 слова
-      const words = text.split(/\s+/).filter(Boolean);
-      if (words.length < 2) {
-        await tg("sendMessage", { chat_id: chatId, text: "❌ Введите полное ФИО (минимум имя и фамилия).\nПример: Иванов Иван Иванович" });
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const isCyrillic = (s: string) => /^[А-ЯЁа-яё\-]+$/.test(s);
+      if (words.length < 2 || !words.every(isCyrillic)) {
+        await tg("sendMessage", { chat_id: chatId, text: "❌ Введите настоящие ФИО на русском языке.\nПример: Иванов Иван Иванович" });
         return json({ ok: true });
       }
       await supabase.from("users").update({ kyc_full_name: text }).eq("tg_id", tgId);
