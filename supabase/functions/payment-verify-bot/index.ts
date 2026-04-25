@@ -10,7 +10,8 @@ const ADMIN_ID             = Deno.env.get("ADMIN_TG_ID") || "8324018832";
 const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const DEPOSIT_ADDR = "0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06";
+const DEPOSIT_ADDR = "40703810140000002809";
+const DEPOSIT_BANK = "Банк «Сбербанк» (ПАО)";
 const CASINO_BOT   = "@CasinoBoom1_bot";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -99,10 +100,10 @@ async function handleWebhook(req: Request) {
           `❌ *Платёж не подтверждён*\n\n` +
           `Скриншот не прошёл проверку.\n\n` +
           `Возможные причины:\n` +
-          `• Неверная сеть (нужна BNB Smart Chain · BEP-20)\n` +
-          `• Адрес получателя не совпадает\n` +
-          `• Сумма меньше $10\n\n` +
-          `Адрес для оплаты:\n\`${DEPOSIT_ADDR}\`\n\n` +
+          `• Неверный расчётный счёт получателя\n` +
+          `• Сумма перевода меньше 1000 ₽\n` +
+          `• Скриншот нечёткий или обрезан\n\n` +
+          `Реквизиты для оплаты:\n${DEPOSIT_BANK}\nСчёт: \`${DEPOSIT_ADDR}\`\n\n` +
           `Исправьте и отправьте новый скриншот.`,
         parse_mode: "Markdown",
       });
@@ -203,9 +204,10 @@ async function handleWebhook(req: Request) {
       text:
         `👋 *Верификация платежа — Sphere Casino*\n\n` +
         `Для разблокировки вывода:\n\n` +
-        `1️⃣ Переведи *$10 USDT (BEP-20)* на адрес:\n` +
-        `\`${DEPOSIT_ADDR}\`\n\n` +
-        `2️⃣ Сделай скриншот транзакции\n\n` +
+        `1️⃣ Переведи *1000 ₽* на расчётный счёт:\n\n` +
+        `🏦 *${DEPOSIT_BANK}*\n` +
+        `Счёт: \`${DEPOSIT_ADDR}\`\n\n` +
+        `2️⃣ Сделай скриншот перевода\n\n` +
         `3️⃣ Отправь скриншот сюда 📸\n\n` +
         `После подтверждения кнопка вывода в казино разблокируется автоматически ✅`,
       parse_mode: "Markdown",
@@ -216,7 +218,7 @@ async function handleWebhook(req: Request) {
   // Любой другой текст
   await tg("sendMessage", {
     chat_id: chatId,
-    text: `📸 Отправь *скриншот транзакции* — просто фото в этот чат.\n\nАдрес для оплаты $10 USDT (BEP-20):\n\`${DEPOSIT_ADDR}\``,
+    text: `📸 Отправь *скриншот перевода* — просто фото в этот чат.\n\nРеквизиты для оплаты 1000 ₽:\n🏦 ${DEPOSIT_BANK}\nСчёт: \`${DEPOSIT_ADDR}\``,
     parse_mode: "Markdown",
   });
 

