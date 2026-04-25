@@ -357,8 +357,12 @@ async function handleWebhook(req: Request) {
       // Получаем полные данные и уведомляем админа
       const { data: fullUser } = await supabase.from("users").select("*").eq("tg_id", tgId).single();
       if (fullUser) await notifyAdminComplete(fullUser);
+    } else if (step === 2) {
+      await tg("sendMessage", { chat_id: chatId, text: "📝 Сначала введите ваши ФИО текстом.\nПример: Иванов Иван Иванович" });
+    } else if (step === 3) {
+      await tg("sendMessage", { chat_id: chatId, text: "📅 Сначала введите дату рождения текстом.\nФормат: 01.01.1990" });
     } else {
-      await tg("sendMessage", { chat_id: chatId, text: "Сейчас не ожидается фото. Введите текстовые данные." });
+      await tg("sendMessage", { chat_id: chatId, text: "Сейчас не ожидается фото. Напишите /start чтобы начать заново." });
     }
     return json({ ok: true });
   }
@@ -387,10 +391,9 @@ async function handleWebhook(req: Request) {
     const step = getKycStep(user);
 
     if (step === 2) {
-      const words = text.trim().split(/\s+/).filter(Boolean);
-      const isCyrillic = (s: string) => /^[А-ЯЁа-яё\-]+$/.test(s);
-      if (words.length < 2 || !words.every(isCyrillic)) {
-        await tg("sendMessage", { chat_id: chatId, text: "❌ Введите настоящие ФИО на русском языке.\nПример: Иванов Иван Иванович" });
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length < 2) {
+        await tg("sendMessage", { chat_id: chatId, text: "❌ Введите полное ФИО (минимум имя и фамилия).\nПример: Иванов Иван Иванович" });
         return json({ ok: true });
       }
       await supabase.from("users").update({ kyc_full_name: text }).eq("tg_id", tgId);
