@@ -1488,6 +1488,17 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
   </div>
 </div>
 
+<!-- Legal Modal -->
+<div id="legalModal" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#141414;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-sizing:border-box;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div id="legalTitle" style="font-weight:800;font-size:16px;color:#fff;"></div>
+      <button onclick="document.getElementById('legalModal').style.display='none'" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:#fff;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div id="legalBody" style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;"></div>
+  </div>
+</div>
+
 <!-- AML BLOCK Modal -->
 <div id="amlModal" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:16px;">
   <div style="background:#0f0a0a;border:1px solid rgba(220,38,38,0.4);border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
@@ -1569,6 +1580,13 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
 
     <!-- ═══ LOBBY ═══ -->
     <div class="screen active" id="screen-lobby">
+      <!-- Online counter -->
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 16px 0;">
+        <div style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:pulse 2s infinite;"></div>
+        <span id="onlineCount" style="font-size:12px;color:rgba(255,255,255,0.55);font-weight:600;"></span>
+        <span style="font-size:12px;color:rgba(255,255,255,0.3);">онлайн сейчас</span>
+      </div>
+
       <div class="hero-banner">
         <div class="hero-badge">НОВЫМ ИГРОКАМ</div>
         <div class="hero-text">
@@ -1634,6 +1652,34 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
       <div class="games-grid" id="gamesGrid">
         <!-- filled by JS -->
       </div>
+      <!-- Providers -->
+      <div style="padding:20px 16px 8px;">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Провайдеры игр</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Pragmatic Play</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Evolution</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">NetEnt</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Hacksaw</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Play'n GO</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Nolimit City</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">BGaming</div>
+          <div style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);">Push Gaming</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:20px 16px 32px;border-top:1px solid rgba(255,255,255,0.06);margin-top:16px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+          <span onclick="showLegalModal('privacy')" style="font-size:12px;color:rgba(255,255,255,0.3);cursor:pointer;text-decoration:underline;">Политика конфиденциальности</span>
+          <span onclick="showLegalModal('terms')" style="font-size:12px;color:rgba(255,255,255,0.3);cursor:pointer;text-decoration:underline;">Правила казино</span>
+          <span onclick="showLegalModal('responsible')" style="font-size:12px;color:rgba(255,255,255,0.3);cursor:pointer;text-decoration:underline;">Ответственная игра</span>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.15);line-height:1.6;">
+          © 2024 Sphere Casino. Лицензия Curaçao eGaming #365/JAZ.<br>
+          Игра доступна лицам от 18 лет. Играйте ответственно.
+        </div>
+      </div>
+
     </div>
 
     <!-- ═══ SLOTS (каталог) ═══ -->
@@ -3067,6 +3113,44 @@ function bjEnd(reason){
 // ═══════════════════
 // WALLET
 // ═══════════════════
+// ── Online counter ──
+(function() {
+  const base = 87;
+  let current = base + Math.floor(Math.random() * 30);
+  function update() {
+    const delta = Math.floor(Math.random() * 11) - 4;
+    current = Math.max(72, Math.min(148, current + delta));
+    const el = document.getElementById('onlineCount');
+    if (el) el.textContent = current.toLocaleString('ru-RU');
+  }
+  update();
+  setInterval(update, 28000);
+})();
+
+// ── Legal modals ──
+const LEGAL_CONTENT = {
+  privacy: {
+    title: 'Политика конфиденциальности',
+    body: `<b>1. Сбор данных</b><br>Мы собираем: Telegram ID, имя пользователя, данные верификации (KYC), историю транзакций. Данные используются исключительно для работы платформы.<br><br><b>2. Хранение</b><br>Данные хранятся на защищённых серверах ЕС. Срок хранения — 5 лет с момента последней активности.<br><br><b>3. Передача третьим лицам</b><br>Данные не передаются третьим лицам, за исключением случаев, предусмотренных законодательством.<br><br><b>4. KYC / AML</b><br>В рамках соблюдения требований AML/CFT мы вправе запрашивать документы, удостоверяющие личность.<br><br><b>5. Контакт</b><br>По вопросам обработки данных: @CasinoBoom1_bot`,
+  },
+  terms: {
+    title: 'Правила казино',
+    body: `<b>1. Общие условия</b><br>Использование платформы означает согласие с настоящими правилами. Минимальный возраст — 18 лет.<br><br><b>2. Аккаунт</b><br>Один пользователь — один аккаунт. Мультиаккаунтинг запрещён и ведёт к блокировке.<br><br><b>3. Депозиты и вывод</b><br>Минимальный депозит — $10 USDT (BEP-20). Вывод доступен после прохождения верификации аккаунта.<br><br><b>4. Бонусы</b><br>Бонусные средства отыгрываются с вейджером x30. Вывод бонуса без отыгрыша невозможен.<br><br><b>5. Честная игра</b><br>Использование стороннего ПО, ботов или эксплойтов запрещено. Нарушение ведёт к блокировке аккаунта и аннулированию баланса.<br><br><b>6. AML политика</b><br>Платформа соблюдает требования AML/CFT. Подозрительные транзакции блокируются для проверки.`,
+  },
+  responsible: {
+    title: 'Ответственная игра',
+    body: `<b>Играй в своё удовольствие</b><br><br>Азартные игры должны быть развлечением, а не источником дохода.<br><br><b>Признаки проблемной игры:</b><br>• Игра на деньги, которые нельзя позволить потерять<br>• Увеличение ставок для отыгрыша потерь<br>• Ложь близким о размере проигрышей<br><br><b>Инструменты контроля:</b><br>• Установи дневной лимит ставок<br>• Делай перерывы<br>• Не играй в состоянии стресса или под алкоголем<br><br><b>Помощь:</b><br>Если игра выходит из-под контроля — обратись на горячую линию психологической помощи: 8-800-2000-122 (бесплатно, РФ).`,
+  },
+};
+
+function showLegalModal(type) {
+  const content = LEGAL_CONTENT[type];
+  if (!content) return;
+  document.getElementById('legalTitle').textContent = content.title;
+  document.getElementById('legalBody').innerHTML = content.body;
+  document.getElementById('legalModal').style.display = 'flex';
+}
+
 function updateKycBanner() {
   const banner = document.getElementById('kycVerifyBanner');
   const badge  = document.getElementById('kycVerifiedBadge');

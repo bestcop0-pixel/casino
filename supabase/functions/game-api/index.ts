@@ -29,6 +29,15 @@ function err(msg: string, status = 400) {
   return json({ error: msg }, status);
 }
 
+async function tgNotify(tgId: number, text: string) {
+  if (!BOT_TOKEN || !tgId) return;
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: tgId, text, parse_mode: "Markdown" }),
+  }).catch(() => {});
+}
+
 // ═══ TELEGRAM AUTH VALIDATION ═══
 async function validateTelegramData(initData: string): Promise<Record<string, string> | null> {
   const params = new URLSearchParams(initData);
@@ -220,6 +229,9 @@ async function handleSpin(req: Request) {
       p_meta: { game: "slots", multiplier },
     });
     if (winResult) newBalance = winResult[0].new_balance;
+    if (winAmount >= 50 && user.tg_id) {
+      tgNotify(user.tg_id, `🎰 *Крупный выигрыш!*\n\n💰 +*$${winAmount.toFixed(2)} USDT* в слотах\n💵 Баланс: *$${parseFloat(newBalance).toFixed(2)} USDT*`);
+    }
   }
 
   // Record game session
