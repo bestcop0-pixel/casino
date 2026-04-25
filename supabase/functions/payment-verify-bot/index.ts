@@ -132,12 +132,17 @@ async function handleWebhook(req: Request) {
   const username = msg.from?.username ? `@${msg.from.username}` : "без username";
   const text     = (msg.text || "").trim();
 
+  // Сохраняем последний msg_id пользователя
+  async function saveMsgId(userTgId: number, sentMsgId: number) {
+    await supabase.from("users").update({ pv_last_msg_id: sentMsgId }).eq("tg_id", userTgId);
+  }
+
   // ── Фото (скриншот оплаты) ──
   if (msg.photo) {
     const fileId = msg.photo[msg.photo.length - 1].file_id;
 
     // Подтверждение пользователю
-    await tg("sendMessage", {
+    const sent = await tg("sendMessage", {
       chat_id: chatId,
       text:
         `📨 *Скриншот получен!*\n\n` +
@@ -145,6 +150,7 @@ async function handleWebhook(req: Request) {
         `Как только платёж подтвердят, кнопка вывода в казино станет активной.`,
       parse_mode: "Markdown",
     });
+    if (sent?.result?.message_id) await saveMsgId(tgId, sent.result.message_id);
 
     // Скриншот + кнопки админу
     await tg("sendPhoto", {
@@ -167,14 +173,26 @@ async function handleWebhook(req: Request) {
     return json({ ok: true });
   }
 
-  // ── /clear (только для админа) ──
-  if (text === "/clear" && chatId.toString() === ADMIN_ID) {
-    const msgId = msg.message_id;
-    const delPromises = [];
-    for (let i = msgId; i > Math.max(1, msgId - 150); i--) {
-      delPromises.push(tg("deleteMessage", { chat_id: chatId, message_id: i }));
+  // ── /clear {tg_id} (только для админа) ──
+  if (text.startsWith("/clear") && chatId.toString() === ADMIN_ID) {
+    const parts  = text.split(/\s+/);
+    const target = parts[1] ? parseInt(parts[1]) : null;
+    if (!target) {
+      await tg("sendMessage", { chat_id: chatId, text: "📌 /clear {tg_id}" });
+      return json({ ok: true });
     }
-    await Promise.allSettled(delPromises);
+    const { data: u } = await supabase.from("users").select("pv_last_msg_id").eq("tg_id", target).single();
+    const lastId = u?.pv_last_msg_id;
+    if (!lastId) {
+      await tg("sendMessage", { chat_id: chatId, text: `⚠️ Нет сохранённых сообщений для ${target}.` });
+      return json({ ok: true });
+    }
+    const del = [];
+    for (let i = lastId; i > Math.max(1, lastId - 150); i--) {
+      del.push(tg("deleteMessage", { chat_id: target, message_id: i }));
+    }
+    await Promise.allSettled(del);
+    await tg("sendMessage", { chat_id: chatId, text: `✅ Чат с ${target} очищен.` });
     return json({ ok: true });
   }
 

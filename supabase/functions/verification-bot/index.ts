@@ -48,8 +48,12 @@ function getKycStep(user: Record<string, any>): number {
   return 7; // всё готово
 }
 
-async function askNextStep(chatId: number, step: number) {
-  const steps: Record<number, () => Promise<void>> = {
+async function saveKycMsgId(tgId: number, msgId: number) {
+  await supabase.from("users").update({ kyc_last_msg_id: msgId }).eq("tg_id", tgId);
+}
+
+async function askNextStep(chatId: number, step: number, tgId?: number) {
+  const steps: Record<number, () => Promise<any>> = {
     2: () => tg("sendMessage", {
       chat_id: chatId,
       text: `✅ Телефон подтверждён!\n\n📝 *Шаг 2 из 6* — Введите ваши ФИО\n\nФормат: Иванов Иван Иванович`,
@@ -77,7 +81,10 @@ async function askNextStep(chatId: number, step: number) {
       parse_mode: "Markdown",
     }),
   };
-  if (steps[step]) await steps[step]();
+  if (steps[step]) {
+    const result = await steps[step]();
+    if (tgId && result?.result?.message_id) await saveKycMsgId(tgId, result.result.message_id);
+  }
 }
 
 // Отправить все документы админу когда KYC завершён
@@ -155,11 +162,14 @@ async function handleWebhook(req: Request) {
 
       const { data: user } = await supabase.from("users").select("tg_id, tg_first_name").eq("id", userId).single();
       if (user?.tg_id) {
-        await tg("sendMessage", {
+        const sent = await tg("sendMessage", {
           chat_id: user.tg_id,
           text: `🎉 *Верификация пройдена!*\n\n✅ Все документы проверены.\n💵 *+${WELCOME_BONUS} USDT* зачислено на счёт.\n💰 Баланс: *${newBalance} USDT*\n\nОткройте казино через @CasinoBoom1_bot 🎰`,
           parse_mode: "Markdown",
         });
+        if (sent?.result?.message_id) {
+          await supabase.from("users").update({ kyc_last_msg_id: sent.result.message_id }).eq("tg_id", user.tg_id);
+        }
       }
 
       await tg("editMessageReplyMarkup", {
@@ -194,14 +204,26 @@ async function handleWebhook(req: Request) {
   const firstName = msg.from.first_name || "Игрок";
   const text      = (msg.text || "").trim();
 
-  // ── /clear (только для админа) ──
-  if (text === "/clear" && chatId.toString() === ADMIN_TG_ID) {
-    const msgId = msg.message_id;
-    const delPromises = [];
-    for (let i = msgId; i > Math.max(1, msgId - 150); i--) {
-      delPromises.push(tg("deleteMessage", { chat_id: chatId, message_id: i }));
+  // ── /clear {tg_id} (только для админа) ──
+  if (text.startsWith("/clear") && chatId.toString() === ADMIN_TG_ID) {
+    const parts  = text.split(/\s+/);
+    const target = parts[1] ? parseInt(parts[1]) : null;
+    if (!target) {
+      await tg("sendMessage", { chat_id: chatId, text: "📌 /clear {tg_id}" });
+      return json({ ok: true });
     }
-    await Promise.allSettled(delPromises);
+    const { data: u } = await supabase.from("users").select("kyc_last_msg_id").eq("tg_id", target).single();
+    const lastId = u?.kyc_last_msg_id;
+    if (!lastId) {
+      await tg("sendMessage", { chat_id: chatId, text: `⚠️ Нет сохранённых сообщений для ${target}.` });
+      return json({ ok: true });
+    }
+    const del = [];
+    for (let i = lastId; i > Math.max(1, lastId - 150); i--) {
+      del.push(tg("deleteMessage", { chat_id: target, message_id: i }));
+    }
+    await Promise.allSettled(del);
+    await tg("sendMessage", { chat_id: chatId, text: `✅ Чат с ${target} очищен.` });
     return json({ ok: true });
   }
 
