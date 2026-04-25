@@ -156,6 +156,8 @@ async function handleAuth(req: Request) {
     balance: parseFloat(user.balance),
     is_admin: user.is_admin,
     phone: user.phone || null,
+    payment_verified: user.payment_verified || false,
+    kyc_verified: user.kyc_verified || false,
     free_spins: freeSpins || [],
     transactions: txs || [],
     token,

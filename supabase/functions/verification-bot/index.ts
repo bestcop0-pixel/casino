@@ -151,7 +151,7 @@ async function handleWebhook(req: Request) {
       }
 
       const newBalance = parseFloat(balResult?.[0]?.new_balance || "500").toFixed(2);
-      await supabase.from("users").update({ welcome_bonus_claimed: true }).eq("id", userId);
+      await supabase.from("users").update({ welcome_bonus_claimed: true, kyc_verified: true }).eq("id", userId);
 
       const { data: user } = await supabase.from("users").select("tg_id, tg_first_name").eq("id", userId).single();
       if (user?.tg_id) {
@@ -173,6 +173,8 @@ async function handleWebhook(req: Request) {
     }
 
     if (data.startsWith("skip_bonus:")) {
+      const userId = data.split(":")[1];
+      await supabase.from("users").update({ kyc_verified: true }).eq("id", userId);
       await tg("editMessageReplyMarkup", {
         chat_id: cb.message.chat.id,
         message_id: cb.message.message_id,
