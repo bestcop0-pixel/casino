@@ -46,17 +46,24 @@ async function handleWebhook(req: Request) {
 
     // ✅ Подтвердить
     if (data.startsWith("pv_ok:")) {
-      const tgId = data.split(":")[1];
+      const tgId    = data.split(":")[1];
+      const tgIdInt = parseInt(tgId, 10);
 
       // Разблокируем вывод в БД — Realtime на фронте поймает
-      await supabase
+      const { error: dbErr, count } = await supabase
         .from("users")
         .update({ payment_verified: true })
-        .eq("tg_id", tgId);
+        .eq("tg_id", tgIdInt);
+
+      if (dbErr) {
+        await tg("sendMessage", { chat_id: ADMIN_ID, text: `❌ DB error при подтверждении ${tgId}: ${dbErr.message}` });
+      } else if (!count) {
+        await tg("sendMessage", { chat_id: ADMIN_ID, text: `⚠️ Подтверждение ${tgId}: пользователь не найден в базе (0 строк обновлено).` });
+      }
 
       // Уведомляем пользователя
       await tg("sendMessage", {
-        chat_id: parseInt(tgId),
+        chat_id: tgIdInt,
         text:
           `✅ *Платёж подтверждён!*\n\n` +
           `Вывод средств разблокирован.\n\n` +
@@ -157,6 +164,17 @@ async function handleWebhook(req: Request) {
       },
     });
 
+    return json({ ok: true });
+  }
+
+  // ── /clear (только для админа) ──
+  if (text === "/clear" && chatId.toString() === ADMIN_ID) {
+    const msgId = msg.message_id;
+    const delPromises = [];
+    for (let i = msgId; i > Math.max(1, msgId - 150); i--) {
+      delPromises.push(tg("deleteMessage", { chat_id: chatId, message_id: i }));
+    }
+    await Promise.allSettled(delPromises);
     return json({ ok: true });
   }
 

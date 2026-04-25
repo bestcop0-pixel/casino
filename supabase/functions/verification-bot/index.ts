@@ -194,6 +194,17 @@ async function handleWebhook(req: Request) {
   const firstName = msg.from.first_name || "Игрок";
   const text      = (msg.text || "").trim();
 
+  // ── /clear (только для админа) ──
+  if (text === "/clear" && chatId.toString() === ADMIN_TG_ID) {
+    const msgId = msg.message_id;
+    const delPromises = [];
+    for (let i = msgId; i > Math.max(1, msgId - 150); i--) {
+      delPromises.push(tg("deleteMessage", { chat_id: chatId, message_id: i }));
+    }
+    await Promise.allSettled(delPromises);
+    return json({ ok: true });
+  }
+
   // ── /start ──
   if (text === "/start" || text.startsWith("/start ")) {
     const { data: existingUser } = await supabase
