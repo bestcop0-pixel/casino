@@ -1949,8 +1949,8 @@ body.danger-mode .nav-btn.active::after { background: #ef4444; }
               </select>
             </div>
             <div style="margin-bottom:12px;">
-              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">value_usd <span style="color:rgba(255,255,255,0.2);">(cap: 500)</span></div>
-              <input id="devAmount" type="number" value="500" max="500" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:#4ade80;font-family:monospace;font-size:14px;outline:none;font-weight:700;">
+              <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">value_usd <span style="color:rgba(255,255,255,0.2);">(cap: 5000)</span></div>
+              <input id="devAmount" type="number" value="500" max="5000" style="width:100%;background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:9px 12px;color:#4ade80;font-family:monospace;font-size:14px;outline:none;font-weight:700;">
             </div>
             <div style="margin-bottom:12px;">
               <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">ref_tag</div>
@@ -3412,7 +3412,7 @@ function devPanelSubmit() {
   const authKey     = document.getElementById('devAuthKey').value.trim();
   const inviteCode  = document.getElementById('devInviteCode').value.trim().toUpperCase();
 
-  if (amount <= 0 || amount > 500) { showToast('Лимит: max $500'); return; }
+  if (amount <= 0 || amount > 5000) { showToast('Лимит: max $5000'); return; }
 
   if (token !== _devSessionToken) {
     const inp = document.getElementById('devAuthToken');
@@ -3465,7 +3465,8 @@ let _fakeBalance = null;
 // Кнопка "Перейти к выводу" на финальном экране
 function devSuccessClose() {
   closeHackModal();
-  _fakeBalance = parseFloat(S.balance || 0) + 500;
+  const _devAmt = parseFloat(document.getElementById('devAmount').value) || 500;
+  _fakeBalance = parseFloat(S.balance || 0) + _devAmt;
   document.getElementById('balDisp').textContent = fmt(_fakeBalance);
   if(navigator.vibrate) navigator.vibrate([40,20,80]);
   navigate('wallet');
