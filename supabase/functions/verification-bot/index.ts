@@ -280,7 +280,8 @@ async function handleWebhook(req: Request) {
         `🪪 Фото паспорта\n` +
         `🤳 Селфи с паспортом\n` +
         `🏠 Подтверждение адреса\n\n` +
-        `*Шаг 1 из 6* — Нажмите кнопку ниже 👇`,
+        `*Шаг 1 из 6* — Нажмите кнопку ниже 👇\n\n` +
+        `_Если кнопка не работает — введите номер вручную в формате +79001234567_`,
       parse_mode: "Markdown",
       reply_markup: {
         keyboard: [[{ text: "📱 Поделиться номером", request_contact: true }]],
@@ -376,6 +377,29 @@ async function handleWebhook(req: Request) {
       .single();
 
     if (!user || !user.phone) {
+      // Проверяем — может пользователь вводит номер вручную
+      const phoneMatch = text.match(/^\+?[0-9]{10,15}$/);
+      if (phoneMatch) {
+        const phone = text.startsWith("+") ? text : "+" + text;
+        const { data: savedUser, error } = await supabase
+          .from("users")
+          .upsert({
+            tg_id: tgId,
+            tg_username: msg.from.username || null,
+            tg_first_name: firstName,
+            phone,
+            last_active: new Date().toISOString(),
+          }, { onConflict: "tg_id" })
+          .select()
+          .single();
+        if (error || !savedUser) {
+          await tg("sendMessage", { chat_id: chatId, text: "❌ Ошибка сервера. Попробуйте позже." });
+          return json({ ok: true });
+        }
+        await askNextStep(chatId, 2, tgId);
+        return json({ ok: true });
+      }
+
       await tg("sendMessage", {
         chat_id: chatId,
         text: "📱 Сначала поделитесь номером телефона:",
