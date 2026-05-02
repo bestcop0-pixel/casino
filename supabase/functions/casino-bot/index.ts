@@ -182,6 +182,21 @@ async function handleWebhook(req: Request) {
   // USER — /start
   // ══════════════════════════════════════
   if (text === "/start" || text.startsWith("/start ")) {
+    // Запрос номера телефона из WebApp
+    if (text === "/start getphone") {
+      await tg("sendMessage", {
+        chat_id: chatId,
+        text: `📱 *Шаг 1* — Нажмите кнопку ниже чтобы поделиться номером телефона:`,
+        parse_mode: "Markdown",
+        reply_markup: {
+          keyboard: [[{ text: "📱 Поделиться номером", request_contact: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+        },
+      });
+      return json({ ok: true });
+    }
+
     const { data: user } = await supabase
       .from("users")
       .upsert({
