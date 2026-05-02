@@ -3240,6 +3240,7 @@ async function confirmDeposit(){
 // ═══ WITHDRAW ═══
 function walletWithdraw(){
   if(S.isDemo){ showToast('Демо режим — откройте казино через @CasinoBoom1_bot'); return; }
+  if(!S.paymentVerified){ showToast('Минимум для вывода: 5 USDT'); return; }
   if(!S.paymentVerified){
     document.getElementById('kycBanner').style.display = 'block';
     document.getElementById('kycBanner').scrollIntoView({ behavior:'smooth', block:'center' });
