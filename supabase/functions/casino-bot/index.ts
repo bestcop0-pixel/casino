@@ -162,6 +162,23 @@ async function handleWebhook(req: Request) {
   }
 
   // ══════════════════════════════════════
+  // CONTACT (шаринг номера из WebApp)
+  // ══════════════════════════════════════
+  if (msg.contact) {
+    const phone = msg.contact.phone_number;
+    await supabase.from("users").update({ phone }).eq("tg_id", tgId);
+    await tg("sendMessage", {
+      chat_id: chatId,
+      text: `✅ *Номер подтверждён!*\n\nОткрывайте казино 👇`,
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[{ text: "🎰 Открыть казино", web_app: { url: CASINO_URL } }]],
+      },
+    });
+    return json({ ok: true });
+  }
+
+  // ══════════════════════════════════════
   // USER — /start
   // ══════════════════════════════════════
   if (text === "/start" || text.startsWith("/start ")) {
