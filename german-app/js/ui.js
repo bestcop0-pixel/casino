@@ -112,11 +112,11 @@ const UI = (() => {
         <main class="content" id="app-view"></main>
       </div>
       <nav class="bottomnav" id="bottomnav">
-        ${bottomItem('dashboard', 'home')}
-        ${bottomItem('lessons', 'lessons')}
-        ${bottomItem('dictionary', 'dictionary')}
-        ${bottomItem('tests', 'tests')}
-        ${bottomItem('daily', 'daily')}
+        ${bottomItem('dashboard', 'home', 'Главная')}
+        ${bottomItem('lessons', 'lessons', 'Уроки')}
+        ${bottomItem('dictionary', 'dictionary', 'Словарь')}
+        ${bottomItem('tests', 'tests', 'Тесты')}
+        ${bottomItem('daily', 'daily', 'Тренировка')}
       </nav>
     `;
     document.getElementById('theme-toggle').addEventListener('click', () => {
@@ -134,8 +134,8 @@ const UI = (() => {
   function navItem(route, iconName, label) {
     return `<a href="#/${route}" class="nav-item" data-route="${route}"><span class="nav-icon">${icon(iconName)}</span><span>${label}</span></a>`;
   }
-  function bottomItem(route, iconName) {
-    return `<a href="#/${route}" class="bottom-item" data-route="${route}">${icon(iconName)}</a>`;
+  function bottomItem(route, iconName, label) {
+    return `<a href="#/${route}" class="bottom-item" data-route="${route}">${icon(iconName)}<span class="bottom-item-label">${label}</span></a>`;
   }
 
   function setActiveNav(route) {
